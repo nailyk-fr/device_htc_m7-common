@@ -1,6 +1,6 @@
 # Copyright 2006 The Android Open Source Project
 
-ifneq ($(BOARD_PROVIDES_LIBRIL),true)
+ifeq ($(BOARD_PROVIDES_LIBRIL),true)
 ifeq ($(TARGET_BOARD_PLATFORM),msm8960)
 ifeq ($(BOARD_VENDOR),htc)
 
