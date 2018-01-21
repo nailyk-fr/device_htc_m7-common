@@ -61,8 +61,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Radio
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.baseband.arch=mdm \
-    ro.telephony.call_ring.multiple=0 \
-    ro.telephony.ril_class=HTCQualcommRIL
+    ro.telephony.call_ring.multiple=0
+#    ro.telephony.ril_class=HTCQualcommRIL
 
 # Time services
 PRODUCT_PROPERTY_OVERRIDES += \

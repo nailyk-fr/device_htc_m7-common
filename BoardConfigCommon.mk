@@ -135,9 +135,9 @@ TARGET_USERIMAGES_USE_EXT4 := true
 BOARD_HARDWARE_CLASS := $(LOCAL_PATH)/lineagehw
 
 # RIL
-BOARD_PROVIDES_LIBRIL := true
+#BOARD_PROVIDES_LIBRIL := true
 TARGET_RIL_VARIANT := caf
-BOARD_RIL_CLASS := ../../../$(LOCAL_PATH)/ril/
+#BOARD_RIL_CLASS := ../../../$(LOCAL_PATH)/ril/
 
 # SELinux
 -include device/qcom/sepolicy/sepolicy.mk
