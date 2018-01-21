@@ -24,6 +24,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
+import android.telephony.SignalStrength;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 import android.telephony.CellInfo;
@@ -47,6 +48,7 @@ public class HTCQualcommRIL extends RIL implements CommandsInterface {
     private static final int RIL_UNSOL_SECTOR_ID_IND = 3057;
     private static final int RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE = 6002;
     private static final int RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED = 21004;
+    private static final int RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED = 21005;
     private static final int RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED = 21007;
 
     public HTCQualcommRIL(Context context, int networkMode, int cdmaSubscription) {
@@ -76,6 +78,40 @@ public class HTCQualcommRIL extends RIL implements CommandsInterface {
         return super.responseIccCardStatus(p);
     }
 
+    @Override
+    protected Object
+    responseSignalStrength(Parcel p) {
+        int numInts = 14;
+        int response[];
+
+        /* HTC signal strength format:
+         * 0: GW_SignalStrength
+         * 1: GW_SignalStrength.bitErrorRate
+         * 2: CDMA_SignalStrength.dbm
+         * 3: CDMA_SignalStrength.ecio
+         * 4: EVDO_SignalStrength.dbm
+         * 5: EVDO_SignalStrength.ecio
+         * 6: EVDO_SignalStrength.signalNoiseRatio
+         * 7: ATT_SignalStrength.dbm
+         * 8: ATT_SignalStrength.ecno
+         * 9: LTE_SignalStrength.signalStrength
+         * 10: LTE_SignalStrength.rsrp
+         * 11: LTE_SignalStrength.rsrq
+         * 12: LTE_SignalStrength.rssnr
+         * 13: LTE_SignalStrength.cqi
+         */
+        response = new int[numInts];
+        for (int i = 0; i < numInts; i++) {
+            if (i > 8) {
+                response[i-2] = p.readInt();
+                response[i] = -1;
+            } else {
+                response[i] = p.readInt();
+            }
+        }
+
+        return response;
+
     private static String
     responseToStringHTC(int request) {
         switch(request) {
@@ -87,6 +123,7 @@ public class HTCQualcommRIL extends RIL implements CommandsInterface {
             case RIL_UNSOL_SECTOR_ID_IND: return "UNSOL_SECTOR_ID_IND";
             case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE: return "UNSOL_RESPONSE_PHONE_MODE_CHANGE";
             case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED: return "UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED";
+            case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED: return "UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED";
             case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED: return "UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED";
             default: return "<unknown response>";
         }
@@ -108,6 +145,7 @@ public class HTCQualcommRIL extends RIL implements CommandsInterface {
             case RIL_UNSOL_SECTOR_ID_IND: ret = responseString(p); break;
             case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE:  ret = responseInts(p); break;
             case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED: ret = responseVoid(p); break;
+            case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED: ret = responseVoid(p); break;
             case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED: ret = responseVoid(p); break;
 
             default:
@@ -128,10 +166,15 @@ public class HTCQualcommRIL extends RIL implements CommandsInterface {
             case RIL_UNSOL_SECTOR_ID_IND:
             case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE:
             case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED:
+            case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
             case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED:
                 if (RILJ_LOGD) {
                     riljLog("[UNSL]< " + responseToStringHTC(response) + " "
                             + retToString(response, ret));
+                }
+                if (mExitEmergencyCallbackModeRegistrants != null) {
+                    mExitEmergencyCallbackModeRegistrants.notifyRegistrants(
+                                        new AsyncResult (null, null, null));
                 }
                 break;
         }

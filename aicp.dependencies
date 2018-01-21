@@ -1,10 +1,12 @@
 [
   {
-    "repository": "android_device_htc_msm8960-common",
-    "target_path": "device/htc/msm8960-common"
-  },
+    "repository":  "LineageOS/android_device_qcom_common",
+    "target_path": "device/qcom/common",
+    "branch":      "lineage-15.1"
+  }
   {
-    "repository": "android_kernel_htc_msm8960",
-    "target_path": "kernel/htc/msm8960"
+    "repository":  "icxj1/kernel_htc_msm8960",
+    "target_path": "kernel/htc/msm8960",
+    "branch":      "Los-15.1"
   }
 ]

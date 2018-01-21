@@ -1,0 +1,2 @@
+allow drmserver sysfs:file { getattr open read };
+

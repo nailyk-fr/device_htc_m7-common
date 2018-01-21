@@ -8,7 +8,8 @@ include $(CLEAR_VARS)
 ## Libs
 LOCAL_SHARED_LIBRARIES := \
     libutils \
-    libcutils
+    libcutils \
+    liblog
 
 LOCAL_SRC_FILES += \
     loc_log.cpp \
@@ -38,6 +39,8 @@ LOCAL_MODULE := libgps.utils
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_PRELINK_MODULE := false
+
+LOCAL_PROPRIETARY_MODULE := true
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)
 include $(BUILD_SHARED_LIBRARY)

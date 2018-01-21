@@ -1,0 +1,2 @@
+allow idmap sysfs:file { getattr open read };
+

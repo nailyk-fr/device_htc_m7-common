@@ -1,0 +1,2 @@
+allow gatekeeperd sysfs:file { getattr open read };
+

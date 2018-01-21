@@ -16,12 +16,13 @@ LOCAL_SHARED_LIBRARIES := \
 
 LOCAL_MODULE := libcamera_shim
 LOCAL_MODULE_TAGS := optional
+LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_C_INCLUDES := \
+LOCAL_C_INCLUDES += \
     framework/native/include \
     system/media/camera/include
 
@@ -36,13 +37,21 @@ LOCAL_SHARED_LIBRARIES := \
     libhidltransport \
     libsensor \
     libutils \
-    android.hidl.token@1.0-utils
+    libcutils \
+    libdl \
+    libbase \
+    android.hidl.token@1.0-utils \
+    android.hardware.graphics.bufferqueue@1.0
 
 LOCAL_STATIC_LIBRARIES := \
-    libarect
+    libarect \
+    libbase
+
+LOCAL_HEADER_LIBRARIES := libnativebase_headers
 
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_MODULE := camera.$(TARGET_BOARD_PLATFORM)
 LOCAL_MODULE_TAGS := optional
+LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)

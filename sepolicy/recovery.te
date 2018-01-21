@@ -1,0 +1,15 @@
+#============= recovery ==============
+allow recovery app_data_file:dir { getattr read };
+allow recovery app_data_file:file getattr;
+allow recovery rootfs:fifo_file { create open read };
+allow recovery rootfs:lnk_file create;
+allow recovery self:capability sys_time;
+allow recovery selinuxfs:file write;
+allow recovery sysfs_thermal:dir search;
+allow recovery sysfs_thermal:file { getattr open read };
+allow recovery sysfs_thermal:lnk_file read;
+allow recovery mtp_device:chr_file { open read write };
+allow recovery system_radio_prop:property_service set;
+allow recovery mtp_device:chr_file ioctl;
+
+

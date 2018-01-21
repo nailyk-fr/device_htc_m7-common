@@ -1,0 +1,4 @@
+allow mediacodec camera_prop:file { getattr open read };
+allow mediacodec sysfs:file { getattr open read };
+allow mediacodec system_server:fifo_file { append write };
+

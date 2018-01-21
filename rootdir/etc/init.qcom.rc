@@ -3,11 +3,25 @@ import init.target.rc
 import init.qcom.usb.rc
 
 on early-init
+    symlink /data/tombstones /tombstones
+
+    # For firmwares
+    mkdir /firmware 0771 system system
+    mkdir /vendor 0771 system system
+    mkdir /vendor/firmware 0771 system system
+    mkdir /firmware/mdm 0771 system system
+    mkdir /firmware/q6 0771 system system  
+
     mount debugfs /sys/kernel/debug /sys/kernel/debug
     chown system system /sys/kernel/debug/kgsl/proc
 
 on init
-    export LD_SHIM_LIBS "/system/lib/hw/camera.vendor.msm8960.so|libcamera_shim.so:/system/vendor/lib/libqc-opt.so|libqc-opt_shim.so:/system/lib/liblog.so|liblog_shim.so:/system/vendor/lib/libwvm.so|libshim_wvm.so:/system/lib/libril.so|libshim_ril.so:/system/vendor/lib/libril-qc-qmi-1.so|libshim_ril.so"
+    export LD_PRELOAD libshim_atomic.so
+
+    export LD_SHIM_LIBS "/system/vendor/lib/hw/camera.vendor.msm8960.so|libcamera_shim.so:/system/vendor/lib/libqc-opt.so|libqc-opt_shim.so:/system/lib/liblog.so|liblog_shim.so:/system/vendor/lib/libwvm.so|libshim_wvm.so:/system/vendor/lib/libril.so|libshim_ril.so:/system/vendor/lib/libril-qc-qmi-1.so|libshim_ril.so"
+
+    # Set permissions for persist partition
+    mkdir /persist 0771 system system  
 
     symlink /sdcard /storage/sdcard0
 
@@ -155,18 +169,15 @@ on init
 
     # Touchscreen
     chown system system /sys/class/leds/button-backlight/currents
+   
+    # ZRAM setup
+    write /sys/block/zram0/comp_algorithm lz4
+    write /proc/sys/vm/page-cluster 0
 
 # On emmc mount the partition containing firmware
 on fs
     mkdir /devlog 0700 root root
     mkdir /ramdump 0700 root root
-
-    # For firmwares
-    mkdir /firmware 0771 system system
-    mkdir /vendor 0771 system system
-    mkdir /vendor/firmware 0771 system system
-    mkdir /firmware/mdm 0771 system system
-    mkdir /firmware/q6 0771 system system
 
     mount_all ./fstab.qcom
 
@@ -190,7 +201,6 @@ on post-fs-data
 
     # Tombstones
     mkdir /data/tombstones 0771 system system
-    symlink /data/tombstones /tombstones
     mkdir /tombstones/mdm 0771 system system
     mkdir /tombstones/modem 0771 system system
     mkdir /tombstones/lpass 0771 system system
@@ -202,13 +212,32 @@ on post-fs-data
     mkdir /data/radio 0770 radio radio
     chmod 2770 /data/radio
 
+    mkdir /data/misc/audio 0770 audio audio
+    mkdir /data/misc/radio 0770 system radio
+    mkdir /data/misc/sms 0770 system radio
+
     # Mpdecision state
     mkdir /data/mpdecision 0660 system system
+
+    # communicate with mpdecision and thermald
+    mkdir /dev/socket/mpdecision 2770 root system
 
     # GPS
     mkdir /data/misc/location 0770 gps gps
     mkdir /data/misc/location/mq 0770 gps gps
     mkdir /data/misc/gpsone_d 0770 system gps
+
+    #  bluetooth
+    mkdir /data/misc/bluetooth 0770 bluetooth bluetooth
+
+    # Create directory for IMS services
+    mkdir /data/shared 0755 system system
+
+    # Create directory for time-services
+    mkdir /data/time/ 0700 system system
+
+    # Create directory for TZ Apps
+    mkdir /data/misc/qsee 0770 system system
 
     setprop qcom.audio.init complete
 
@@ -219,6 +248,7 @@ on post-fs-data
     setprop vold.post_fs_data_done 1
 
 on boot
+    #Create QMUX deamon socket area
     mkdir /dev/socket/qmux_radio 0770 radio radio
     chmod 2770 /dev/socket/qmux_radio
     mkdir /dev/socket/qmux_audio 0770 audio audio
@@ -228,10 +258,16 @@ on boot
     mkdir /dev/socket/qmux_gps 0770 gps gps
     chmod 2770 /dev/socket/qmux_gps
 
+    # Allow QMUX daemon to assign port open wait time
+    chown radio radio /sys/devices/virtual/hsicctl/hsicctl0/modem_wait
+
     start qcamerasvr
 
-    # 4.3 requires this
+    # To prevent permission denied error for telephony
     chmod 0644 /proc/cmdline
+
+    chmod 0660 /dev/ttyHS0
+    chown bluetooth bluetooth /dev/ttyHS0
 
     # Bluetooth
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
@@ -262,7 +298,7 @@ on boot
     write /proc/sys/net/ipv6/conf/p2p0/disable_ipv6 1
 
     # Create symlink for fb1 as HDMI
-    symlink /dev/graphics/fb1 /dev/graphics/hdmi
+    symlink /sys/class/graphics/fb1 /dev/graphics/hdmi
 
     # Set permissions for fb1 related nodes
     chmod 0664 /sys/devices/virtual/graphics/fb1/format_3d
@@ -302,8 +338,11 @@ on boot
     chown system system /sys/class/power_supply/battery/navigation
     chmod 0220 /sys/class/power_supply/battery/navigation
 
+    # Bluetooth MAC address
+    chown bluetooth bluetooth /sys/module/htc_bdaddress/parameters/bdaddress
+
     # Wifi firmware reload path
-    chown wifi wifi /sys/module/wlan/parameters/fwpath
+    chown wifi wifi /sys/module/bcmdhd/parameters/firmware_path
 
     # Wake on volume
     write /sys/keyboard/vol_wakeup 1
@@ -323,7 +362,7 @@ service cir_fw_update /system/bin/cir_fw_update -u cir.img
 
 service netmgrd /system/bin/netmgrd
     class core
-    group system wakelock
+    group root wifi wakelock radio inet
 
 service mpdecision /system/bin/mpdecision --no_sleep --avg_comp
     class main
@@ -336,10 +375,11 @@ service qcamerasvr /system/bin/mm-qcamera-daemon
     user camera
     group camera system inet graphics
 
+# QMUX must be in multiple groups to support external process connections
 service qmuxd /system/bin/qmuxd
     class core
     user radio
-    group radio audio wakelock gps
+    group radio audio bluetooth gps oem_2950
 
 service qseecomd /system/bin/qseecomd
     class core
@@ -377,6 +417,9 @@ on property:init.svc.bootanim=stopped
     chown radio.radio /sys/devices/virtual/hsicctl/hsicctl0/modem_wait
     # Init modem
     write /sys/module/rmnet_usb/parameters/rmnet_data_init 1
+
+on property:sys.boot_completed=1
+    restart qcamerasvr
 
 on property:service.adb.root=1
     write /sys/class/android_usb/android0/enable 0

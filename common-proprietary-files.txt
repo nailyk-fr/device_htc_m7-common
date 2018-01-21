@@ -69,92 +69,98 @@ etc/hltof.bin
 etc/hltrd.bin
 
 # Audio
-lib/libacdbloader.so
-lib/libaudcal.so
-lib/libcsd-client.so
+vendor/lib/libacdbloader.so
+vendor/lib/libaudcal.so
+vendor/lib/libcsd-client.so
+
+# Fm
+-lib/vendor.qti.hardware.fm@1.0.so
+vendor/lib/hw/vendor.qti.hardware.fm@1.0-impl.so
+vendor/lib/vendor.qti.hardware.fm@1.0_vendor.so
 
 # Camera
-lib/hw/camera.vendor.msm8960.so
-lib/libBeautyChat.so
-lib/libcameraasd.so
-lib/libcameraface.so
-lib/libcamerapp.so
-lib/libcam_oem_plugin.so
-lib/libchromatix_ar0260_default_video.so
-lib/libchromatix_ar0260_hdr.so
-lib/libchromatix_ar0260_preview.so
-lib/libchromatix_ar0260_zsl.so
-lib/libchromatix_imx135_default_video.so
-lib/libchromatix_imx135_hdr.so
-lib/libchromatix_imx135_hfr.so
-lib/libchromatix_imx135_preview.so
-lib/libchromatix_imx135_zsl.so
-lib/libchromatix_imx175_default_video.so
-lib/libchromatix_imx175_hdr.so
-lib/libchromatix_imx175_hfr.so
-lib/libchromatix_imx175_preview.so
-lib/libchromatix_imx175_zsl.so
-lib/libchromatix_ov2722_default_video.so
-lib/libchromatix_ov2722_hdr.so
-lib/libchromatix_ov2722_preview.so
-lib/libchromatix_ov2722_zsl.so
-lib/libchromatix_ov4688_default_video.so
-lib/libchromatix_ov4688_hdr.so
-lib/libchromatix_ov4688_hfr.so
-lib/libchromatix_ov4688_hfr_60fps.so
-lib/libchromatix_ov4688_night.so
-lib/libchromatix_ov4688_preview.so
-lib/libchromatix_ov4688_video_hdr.so
-lib/libchromatix_ov4688_zoe.so
-lib/libchromatix_ov4688_zsl.so
-lib/libchromatix_vd6869_default_video.so
-lib/libchromatix_vd6869_hdr.so
-lib/libchromatix_vd6869_hfr.so
-lib/libchromatix_vd6869_hfr_60fps.so
-lib/libchromatix_vd6869_night.so
-lib/libchromatix_vd6869_preview.so
-lib/libchromatix_vd6869_video_hdr.so
-lib/libchromatix_vd6869_zoe.so
-lib/libchromatix_vd6869_zsl.so
-lib/libgemini.so
-lib/libhtccamera_yushaniiproc.so
-lib/libHTC_DIS.so
-lib/libimage-jpeg-dec-omx-comp.so
-lib/libimage-jpeg-enc-omx-comp.so
-lib/libimage-omx-common.so
-lib/libmm-abl.so
-lib/libmm-abl-oem.so
-lib/libmmcamera_aec.so
-lib/libmmcamera_faceproc.so
-lib/libmmcamera_frameproc.so
-lib/libmmcamera_hdr_lib.so
-lib/libmmcamera_image_stab.so
-lib/libmmcamera_interface2.so
-lib/libmmcamera_rawchipproc.so
-lib/libmmcamera_rubik.so
-lib/libmmcamera_statsproc31.so
-lib/libmmcamera_wavelet_lib.so
-lib/libmmipl.so
-lib/libmmjpeg.so
-lib/libmmstillomx.so
-lib/liboemcamera.so
-lib/libposteffect.so
-lib/libwriteback.so
+vendor/lib/hw/camera.vendor.msm8960.so
+vendor/lib/libBeautyChat.so
+vendor/lib/libcameraasd.so
+vendor/lib/libcameraface.so
+vendor/lib/libcamerapp.so
+vendor/lib/libcam_oem_plugin.so
+vendor/lib/libchromatix_ar0260_default_video.so
+vendor/lib/libchromatix_ar0260_hdr.so
+vendor/lib/libchromatix_ar0260_preview.so
+vendor/lib/libchromatix_ar0260_zsl.so
+vendor/lib/libchromatix_imx135_default_video.so
+vendor/lib/libchromatix_imx135_hdr.so
+vendor/lib/libchromatix_imx135_hfr.so
+vendor/lib/libchromatix_imx135_preview.so
+vendor/lib/libchromatix_imx135_zsl.so
+vendor/lib/libchromatix_imx175_default_video.so
+vendor/lib/libchromatix_imx175_hdr.so
+vendor/lib/libchromatix_imx175_hfr.so
+vendor/lib/libchromatix_imx175_preview.so
+vendor/lib/libchromatix_imx175_zsl.so
+vendor/lib/libchromatix_ov2722_default_video.so
+vendor/lib/libchromatix_ov2722_hdr.so
+vendor/lib/libchromatix_ov2722_preview.so
+vendor/lib/libchromatix_ov2722_zsl.so
+vendor/lib/libchromatix_ov4688_default_video.so
+vendor/lib/libchromatix_ov4688_hdr.so
+vendor/lib/libchromatix_ov4688_hfr.so
+vendor/lib/libchromatix_ov4688_hfr_60fps.so
+vendor/lib/libchromatix_ov4688_night.so
+vendor/lib/libchromatix_ov4688_preview.so
+vendor/lib/libchromatix_ov4688_video_hdr.so
+vendor/lib/libchromatix_ov4688_zoe.so
+vendor/lib/libchromatix_ov4688_zsl.so
+vendor/lib/libchromatix_vd6869_default_video.so
+vendor/lib/libchromatix_vd6869_hdr.so
+vendor/lib/libchromatix_vd6869_hfr.so
+vendor/lib/libchromatix_vd6869_hfr_60fps.so
+vendor/lib/libchromatix_vd6869_night.so
+vendor/lib/libchromatix_vd6869_preview.so
+vendor/lib/libchromatix_vd6869_video_hdr.so
+vendor/lib/libchromatix_vd6869_zoe.so
+vendor/lib/libchromatix_vd6869_zsl.so
+vendor/lib/libgemini.so
+vendor/lib/libhtccamera_yushaniiproc.so
+vendor/lib/libHTC_DIS.so
+vendor/lib/libimage-jpeg-dec-omx-comp.so
+vendor/lib/libimage-jpeg-enc-omx-comp.so
+vendor/lib/libimage-omx-common.so
+vendor/lib/libmm-abl.so
+vendor/lib/libmm-abl-oem.so
+vendor/lib/libmmcamera_aec.so
+vendor/lib/libmmcamera_faceproc.so
+vendor/lib/libmmcamera_frameproc.so
+vendor/lib/libmmcamera_hdr_lib.so
+vendor/lib/libmmcamera_image_stab.so
+vendor/lib/libmmcamera_interface2.so
+vendor/lib/libmmcamera_rawchipproc.so
+vendor/lib/libmmcamera_rubik.so
+vendor/lib/libmmcamera_statsproc31.so
+vendor/lib/libmmcamera_wavelet_lib.so
+vendor/lib/libmmipl.so
+vendor/lib/libmmjpeg.so
+vendor/lib/libmmstillomx.so
+vendor/lib/liboemcamera.so
+vendor/lib/libposteffect.so
+vendor/lib/libwriteback.so
 
 # Camera firmware
 etc/firmware/ILP0100_IPM_Code_out.bin
 etc/firmware/ILP0100_IPM_Data_out.bin
+etc/firmware/lscbuffer_rev2.bin
 
 # DRM
-bin/qseecomd
-lib/libdrmdecrypt.so
+vendor/bin/qseecomd
+vendor/lib/libdrmdecrypt.so
 vendor/lib/libdrmfs.so
 vendor/lib/libdrmtime.so
 vendor/lib/libQSEEComAPI.so
 
 # GPS
-lib/libgeofence.so
-lib/libloc_api_v02.so
+vendor/lib/libgeofence.so
+vendor/lib/libloc_api_v02.so
 
 # Graphics
 vendor/lib/egl/eglsubAndroid.so
@@ -176,19 +182,19 @@ vendor/lib/libsc-a3xx.so
 vendor/lib/libuiblur.so
 
 # Graphics firmware
-etc/firmware/a300_pfp.fw
-etc/firmware/a300_pm4.fw
-etc/firmware/vidc.b00
-etc/firmware/vidc.b01
-etc/firmware/vidc.b02
-etc/firmware/vidc.b03
-etc/firmware/vidc.mdt
-etc/firmware/vidc_1080p.fw
+vendor/firmware/a300_pfp.fw
+vendor/firmware/a300_pm4.fw
+vendor/firmware/vidc.b00
+vendor/firmware/vidc.b01
+vendor/firmware/vidc.b02
+vendor/firmware/vidc.b03
+vendor/firmware/vidc.mdt
+vendor/firmware/vidc_1080p.fw
 
 # Irda
-bin/cir_fw_update
+vendor/bin/cir_fw_update
 etc/cir.img
-lib/hw/consumerir.default.so
+vendor/lib/hw/consumerir.default.so
 
 # Keystore
 vendor/firmware/keymaster/keymaster.b00
@@ -198,46 +204,52 @@ vendor/firmware/keymaster/keymaster.b03
 vendor/firmware/keymaster/keymaster.mdt
 
 # Media
-lib/libI420colorconvert.so
-lib/libmm-color-convertor.so
+vendor/lib/libI420colorconvert.so
+vendor/lib/libmm-color-convertor.so
+
+# Omx
+vendor/lib/libOmxAacDec.so
+vendor/lib/libOmxAmrwbplusDec.so
+vendor/lib/libOmxEvrcDec.so
+vendor/lib/libOmxQcelp13Dec.so
+vendor/lib/libOmxWmaDec.so
 
 # Modem firmware
-etc/firmware/hcheck.b00
-etc/firmware/hcheck.b01
-etc/firmware/hcheck.b02
-etc/firmware/hcheck.b03
-etc/firmware/hcheck.mdt
-etc/firmware/lscbuffer_rev2.bin
+vendor/firmware/hcheck.b00
+vendor/firmware/hcheck.b01
+vendor/firmware/hcheck.b02
+vendor/firmware/hcheck.b03
+vendor/firmware/hcheck.mdt
 
 # Qualcomm extra
 vendor/lib/libqc-opt.so
 
 # Sensors
-lib/hw/sensors.default.so
-lib/libimu.so
-lib/libmllite.so
-lib/libmlplatform.so
-lib/libmpl.so
-lib/libmpl_jni.so
+vendor/lib/hw/sensors.default.so
+vendor/lib/libimu.so
+vendor/lib/libmllite.so
+vendor/lib/libmlplatform.so
+vendor/lib/libmpl.so
+vendor/lib/libmpl_jni.so
 
 # Widevine
-vendor/lib/drm/libdrmwvmplugin.so
-vendor/lib/libwvdrm_L1.so
-vendor/lib/libwvm.so
-vendor/lib/libWVStreamControlAPI_L1.so
+#vendor/lib/drm/libdrmwvmplugin.so
+#vendor/lib/libwvdrm_L1.so
+#vendor/lib/libwvm.so
+#vendor/lib/libWVStreamControlAPI_L1.so
 vendor/lib/mediadrm/libwvdrmengine.so
 
 # Widevine firmware
-etc/firmware/widevine.b00
-etc/firmware/widevine.b01
-etc/firmware/widevine.b02
-etc/firmware/widevine.b03
-etc/firmware/widevine.mdt
-etc/firmware/tzapps.b00
-etc/firmware/tzapps.b01
-etc/firmware/tzapps.b02
-etc/firmware/tzapps.b03
-etc/firmware/tzapps.mdt
+vendor/firmware/widevine.b00
+vendor/firmware/widevine.b01
+vendor/firmware/widevine.b02
+vendor/firmware/widevine.b03
+vendor/firmware/widevine.mdt
+vendor/firmware/tzapps.b00
+vendor/firmware/tzapps.b01
+vendor/firmware/tzapps.b02
+vendor/firmware/tzapps.b03
+vendor/firmware/tzapps.mdt
 
 # WLAN firmware
 etc/firmware/fw_bcm4335_apsta_b0.bin
