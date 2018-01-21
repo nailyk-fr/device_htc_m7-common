@@ -1,9 +1,12 @@
+ifneq ($(BUILD_TINY_ANDROID),true)
+#Compile this library only for builds with the latest modem image
+
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := libloc_eng
-LOCAL_MODULE_OWNER := qcom
+
 LOCAL_PROPRIETARY_MODULE := true
 
 LOCAL_MODULE_TAGS := optional
@@ -93,3 +96,5 @@ LOCAL_C_INCLUDES:= \
 LOCAL_MODULE_RELATIVE_PATH := hw
 
 include $(BUILD_SHARED_LIBRARY)
+
+endif # not BUILD_TINY_ANDROID
