@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,28 +31,29 @@
 #define LOG_TAG "LocSvc_afw"
 
 #include <hardware/gps.h>
-#include <gps_extended.h>
-#include <loc_eng.h>
-#include <loc_target.h>
-#include <loc_log.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <dlfcn.h>
+#include <loc_eng.h>
+#include <loc_log.h>
+#include <msg_q.h>
+#include <dlfcn.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <LocDualContext.h>
+
 #include <cutils/properties.h>
 
-using namespace loc_core;
-
+#ifdef FEATURE_ULP
 //Globals defns
+static const ulpInterface * loc_eng_ulp_inf = NULL;
+static const ulpInterface * loc_eng_get_ulp_inf(void);
+#endif
 static gps_location_callback gps_loc_cb = NULL;
 static gps_sv_status_callback gps_sv_cb = NULL;
 
-static void local_loc_cb(UlpLocation* location, void* locExt);
-static void local_sv_cb(GpsSvStatus* sv_status, void* svExt);
+static void loc_cb(GpsLocation* location, void* locExt);
+static void sv_cb(GpsSvStatus* sv_status, void* svExt);
 
 static const GpsGeofencingInterface* get_geofence_interface(void);
 
@@ -69,6 +70,15 @@ static int  loc_set_position_mode(GpsPositionMode mode, GpsPositionRecurrence re
                                   uint32_t preferred_time);
 static const void* loc_get_extension(const char* name);
 
+#ifdef FEATURE_ULP
+//ULP/Hybrid provider Function definitions
+static int loc_update_criteria(UlpLocationCriteria criteria);
+static int loc_ulp_network_init(UlpNetworkLocationCallbacks *callbacks);
+static int loc_ulp_send_network_position(UlpNetworkPositionReport *position_report);
+static int loc_ulp_phone_context_init(UlpPhoneContextCallbacks *callback);
+static int loc_ulp_phone_context_settings_update(UlpPhoneContextSettings *settings);
+#endif
+
 // Defines the GpsInterface in gps.h
 static const GpsInterface sLocEngInterface =
 {
@@ -82,16 +92,26 @@ static const GpsInterface sLocEngInterface =
    loc_delete_aiding_data,
    loc_set_position_mode,
    loc_get_extension
+#ifdef FEATURE_ULP
+   ,loc_update_criteria
+#endif
 };
 
 // Function declarations for sLocEngAGpsInterface
 static void loc_agps_init(AGpsCallbacks* callbacks);
+#ifdef FEATURE_IPV6
 static int  loc_agps_open(const char* apn);
 static int  loc_agps_closed();
 static int  loc_agps_open_failed();
+#else
+static int  loc_agps_open(const char* apn);
+static int  loc_agps_closed();
+static int  loc_agps_open_failed();
+#endif
 static int  loc_agps_set_server(AGpsType type, const char *hostname, int port);
-static int  loc_agps_open_with_apniptype( const char* apn, ApnIpType apnIpType);
-
+#ifdef FEATURE_IPV6
+static int  loc_agps_open_with_apn_type(const char* apn, ApnIpType bearerType);
+#endif
 static const AGpsInterface sLocEngAGpsInterface =
 {
    sizeof(AGpsInterface),
@@ -99,8 +119,10 @@ static const AGpsInterface sLocEngAGpsInterface =
    loc_agps_open,
    loc_agps_closed,
    loc_agps_open_failed,
-   loc_agps_set_server,
-   loc_agps_open_with_apniptype
+   loc_agps_set_server
+#ifdef FEATURE_IPV6
+   ,loc_agps_open_with_apn_type
+#endif
 };
 
 static int loc_xtra_init(GpsXtraCallbacks* callbacks);
@@ -141,8 +163,90 @@ static const AGpsRilInterface sLocEngAGpsRilInterface =
    loc_agps_ril_update_network_availability
 };
 
+#ifdef FEATURE_ULP
+static bool loc_inject_raw_command(char* command, int length);
+
+static const InjectRawCmdInterface sLocEngInjectRawCmdInterface =
+{
+   sizeof(InjectRawCmdInterface),
+   loc_inject_raw_command
+};
+
+//ULP/Hybrid provider interfaces
+static const UlpNetworkInterface sUlpNetworkInterface =
+{
+   sizeof(UlpNetworkInterface),
+   loc_ulp_network_init,
+   loc_ulp_send_network_position
+};
+static const UlpPhoneContextInterface sLocEngUlpPhoneContextInterface =
+{
+    sizeof(UlpPhoneContextInterface),
+    loc_ulp_phone_context_init,
+    loc_ulp_phone_context_settings_update
+};
+#endif
 static loc_eng_data_s_type loc_afw_data;
 static int gss_fd = 0;
+
+#define TARGET_NAME_OTHER              0
+#define TARGET_NAME_APQ8064_STANDALONE 1
+#define TARGET_NAME_APQ8064_FUSION3    2
+
+static int read_a_line(const char * file_path, char * line, int line_size)
+{
+    FILE *fp;
+    int result = 0;
+
+    * line = '\0';
+    fp = fopen(file_path, "r" );
+    if( fp == NULL ) {
+        LOC_LOGE("open failed: %s: %s\n", file_path, strerror(errno));
+        result = -1;
+    } else {
+        int len;
+        fgets(line, line_size, fp);
+        len = strlen(line);
+        len = len < line_size - 1? len : line_size - 1;
+        line[len] = '\0';
+        LOC_LOGD("cat %s: %s", file_path, line);
+        fclose(fp);
+    }
+    return result;
+}
+
+#define LINE_LEN 100
+#define STR_LIQUID    "Liquid"
+#define STR_SURF      "Surf"
+#define STRLEN_LIQUID (sizeof(STR_LIQUID) - 1)
+#define STRLEN_SURF   (sizeof(STR_SURF) - 1)
+#define IS_STR_END(c) ((c) == '\0' || (c) == '\n' || (c) == '\r')
+
+static int get_target_name(void)
+{
+    int target_name = TARGET_NAME_OTHER;
+
+    char hw_platform[]      = "/sys/devices/system/soc/soc0/hw_platform"; // "Liquid" or "Surf"
+    char id[]               = "/sys/devices/system/soc/soc0/id"; //109
+    char mdm[]              = "/dev/mdm"; // No such file or directory
+
+    char line[LINE_LEN];
+
+    read_a_line( hw_platform, line, LINE_LEN);
+    if(( !memcmp(line, STR_LIQUID, STRLEN_LIQUID) && IS_STR_END(line[STRLEN_LIQUID]) ) ||
+       ( !memcmp(line, STR_SURF,   STRLEN_SURF)   && IS_STR_END(line[STRLEN_SURF])   )
+      ) {
+        if (!read_a_line( mdm, line, LINE_LEN)) {
+            target_name = TARGET_NAME_APQ8064_FUSION3;
+        } else {
+            read_a_line( id, line, LINE_LEN);
+            if(!strncmp(line, "109", strlen("109")) || !strncmp(line, "153", strlen("153"))) {
+                target_name = TARGET_NAME_APQ8064_STANDALONE;
+            }
+        }
+    }
+    return target_name;
+}
 
 /*===========================================================================
 FUNCTION    gps_get_hardware_interface
@@ -168,8 +272,6 @@ const GpsInterface* gps_get_hardware_interface ()
 
     char propBuf[PROPERTY_VALUE_MAX];
 
-    loc_eng_read_config();
-
     // check to see if GPS should be disabled
     property_get("gps.disable", propBuf, "");
     if (propBuf[0] == '1')
@@ -180,8 +282,6 @@ const GpsInterface* gps_get_hardware_interface ()
         ret_val = &sLocEngInterface;
     }
 
-    loc_eng_read_config();
-
     EXIT_LOG(%p, ret_val);
     return ret_val;
 }
@@ -189,30 +289,38 @@ const GpsInterface* gps_get_hardware_interface ()
 // for gps.c
 extern "C" const GpsInterface* get_gps_interface()
 {
-    unsigned int target = TARGET_DEFAULT;
     loc_eng_read_config();
-
-    target = get_target();
-    LOC_LOGD("Target name check returned %s", loc_get_target_name(target));
-        //APQ8064
-        if( getTargetGnssType(target) == GNSS_GSS ) {
+#ifdef FEATURE_ULP
+    //We load up libulp module at this point itself if ULP configured to be On
+    if(gps_conf.CAPABILITIES & ULP_CAPABILITY) {
+       loc_eng_ulp_inf = loc_eng_get_ulp_inf();
+    }
+#endif
+    if (get_target_name() == TARGET_NAME_APQ8064_STANDALONE)
+    {
         gps_conf.CAPABILITIES &= ~(GPS_CAPABILITY_MSA | GPS_CAPABILITY_MSB);
         gss_fd = open("/dev/gss", O_RDONLY);
         if (gss_fd < 0) {
             LOC_LOGE("GSS open failed: %s\n", strerror(errno));
         }
-        else {
-            LOC_LOGD("GSS open success! CAPABILITIES %0lx\n",
-                     gps_conf.CAPABILITIES);
-        }
+        LOC_LOGD("GSS open success! CAPABILITIES %0x\n", gps_conf.CAPABILITIES);
     }
-    //MPQ8064
-        else if( getTargetGnssType(target) == GNSS_NONE) {
-        LOC_LOGE("No GPS HW on this target (MPQ8064). Not returning interface");
-        return NULL;
-    }
+
     return &sLocEngInterface;
 }
+
+static void loc_free_msg(void* msg)
+{
+    delete (loc_eng_msg*)msg;
+}
+
+#ifdef FEATURE_ULP
+void loc_ulp_msg_sender(void* loc_eng_data_p, void* msg)
+{
+    LocEngContext* loc_eng_context = (LocEngContext*)((loc_eng_data_s_type*)loc_eng_data_p)->context;
+    msg_q_snd((void*)loc_eng_context->ulp_q, msg, loc_free_msg);
+}
+#endif
 
 /*===========================================================================
 FUNCTION    loc_init
@@ -235,26 +343,23 @@ static int loc_init(GpsCallbacks* callbacks)
 {
     int retVal = -1;
     ENTRY_LOG();
-    LOC_API_ADAPTER_EVENT_MASK_T event;
-
-    if (NULL == callbacks) {
+    if(callbacks == NULL) {
         LOC_LOGE("loc_init failed. cb = NULL\n");
         EXIT_LOG(%d, retVal);
         return retVal;
     }
-
-    event = LOC_API_ADAPTER_BIT_PARSED_POSITION_REPORT |
-            LOC_API_ADAPTER_BIT_SATELLITE_REPORT |
-            LOC_API_ADAPTER_BIT_LOCATION_SERVER_REQUEST |
-            LOC_API_ADAPTER_BIT_ASSISTANCE_DATA_REQUEST |
-            LOC_API_ADAPTER_BIT_IOCTL_REPORT |
-            LOC_API_ADAPTER_BIT_STATUS_REPORT |
-            LOC_API_ADAPTER_BIT_NMEA_1HZ_REPORT |
-            LOC_API_ADAPTER_BIT_NI_NOTIFY_VERIFY_REQUEST;
-
-    LocCallbacks clientCallbacks = {local_loc_cb, /* location_cb */
+    LOC_API_ADAPTER_EVENT_MASK_T event =
+        LOC_API_ADAPTER_BIT_PARSED_POSITION_REPORT |
+        LOC_API_ADAPTER_BIT_SATELLITE_REPORT |
+        LOC_API_ADAPTER_BIT_LOCATION_SERVER_REQUEST |
+        LOC_API_ADAPTER_BIT_ASSISTANCE_DATA_REQUEST |
+        LOC_API_ADAPTER_BIT_IOCTL_REPORT |
+        LOC_API_ADAPTER_BIT_STATUS_REPORT |
+        LOC_API_ADAPTER_BIT_NMEA_1HZ_REPORT |
+        LOC_API_ADAPTER_BIT_NI_NOTIFY_VERIFY_REQUEST;
+    LocCallbacks clientCallbacks = {loc_cb, /* location_cb */
                                     callbacks->status_cb, /* status_cb */
-                                    local_sv_cb, /* sv_status_cb */
+                                    sv_cb, /* sv_status_cb */
                                     callbacks->nmea_cb, /* nmea_cb */
                                     callbacks->set_capabilities_cb, /* set_capabilities_cb */
                                     callbacks->acquire_wakelock_cb, /* acquire_wakelock_cb */
@@ -263,14 +368,23 @@ static int loc_init(GpsCallbacks* callbacks)
                                     NULL, /* location_ext_parser */
                                     NULL, /* sv_ext_parser */
                                     callbacks->request_utc_time_cb /* request_utc_time_cb */};
-
     gps_loc_cb = callbacks->location_cb;
     gps_sv_cb = callbacks->sv_status_cb;
 
-    retVal = loc_eng_init(loc_afw_data, &clientCallbacks, event);
-    loc_afw_data.adapter->requestUlp(gps_conf.CAPABILITIES);
-    loc_afw_data.adapter->mAgpsEnabled = !loc_afw_data.adapter->hasAgpsExt();
+#ifdef FEATURE_ULP
+    if (loc_eng_ulp_inf == NULL)
+        retVal = loc_eng_init(loc_afw_data, &clientCallbacks, event,
+                              NULL);
+    else
+        retVal = loc_eng_init(loc_afw_data, &clientCallbacks, event,
+                              loc_ulp_msg_sender);
 
+    int ret_val1 = loc_eng_ulp_init(loc_afw_data, loc_eng_ulp_inf);
+    LOC_LOGD("loc_eng_ulp_init returned %d\n",ret_val1);
+#else
+    retVal = loc_eng_init(loc_afw_data, &clientCallbacks, event,
+                          NULL);
+#endif
 
     EXIT_LOG(%d, retVal);
     return retVal;
@@ -300,7 +414,7 @@ static void loc_cleanup()
     gps_sv_cb = NULL;
 
     /*
-     * if (get_target() == TARGET_NAME_APQ8064_STANDALONE)
+     * if (get_target_name() == TARGET_NAME_APQ8064_STANDALONE)
      * {
      *     close(gss_fd);
      *     LOC_LOGD("GSS shutdown.\n");
@@ -354,8 +468,7 @@ SIDE EFFECTS
 static int loc_stop()
 {
     ENTRY_LOG();
-    int ret_val = -1;
-    ret_val = loc_eng_stop(loc_afw_data);
+    int ret_val = loc_eng_stop(loc_afw_data);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
@@ -384,7 +497,6 @@ static int  loc_set_position_mode(GpsPositionMode mode,
                                   uint32_t preferred_time)
 {
     ENTRY_LOG();
-    int ret_val = -1;
     LocPositionMode locMode;
     switch (mode) {
     case GPS_POSITION_MODE_MS_BASED:
@@ -400,7 +512,7 @@ static int  loc_set_position_mode(GpsPositionMode mode,
 
     LocPosMode params(locMode, recurrence, min_interval,
                       preferred_accuracy, preferred_time, NULL, NULL);
-    ret_val = loc_eng_set_position_mode(loc_afw_data, params);
+    int ret_val = loc_eng_set_position_mode(loc_afw_data, params);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
@@ -425,11 +537,7 @@ SIDE EFFECTS
 static int loc_inject_time(GpsUtcTime time, int64_t timeReference, int uncertainty)
 {
     ENTRY_LOG();
-    int ret_val = 0;
-
-    ret_val = loc_eng_inject_time(loc_afw_data, time,
-                                  timeReference, uncertainty);
-
+    int ret_val = loc_eng_inject_time(loc_afw_data, time, timeReference, uncertainty);
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
@@ -512,6 +620,33 @@ static void loc_delete_aiding_data(GpsAidingData f)
     EXIT_LOG(%s, VOID_RET);
 }
 
+#ifdef FEATURE_ULP
+/*===========================================================================
+FUNCTION    loc_update_criteria
+
+DESCRIPTION
+   This is used to inform the ULP module of new unique criteria that are passed
+   in by the applications
+DEPENDENCIES
+   N/A
+
+RETURN VALUE
+   0: success
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+static int loc_update_criteria(UlpLocationCriteria criteria)
+{
+    ENTRY_LOG();
+    int ret_val = loc_eng_update_criteria(loc_afw_data, criteria);
+
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+#endif
+
 const GpsGeofencingInterface* get_geofence_interface(void)
 {
     ENTRY_LOG();
@@ -535,7 +670,7 @@ const GpsGeofencingInterface* get_geofence_interface(void)
     dlerror();    /* Clear any existing error */
     get_gps_geofence_interface = (get_gps_geofence_interface_function)dlsym(handle, "gps_geofence_get_interface");
     if ((error = dlerror()) != NULL)  {
-        LOC_LOGE ("%s, dlsym for get_gps_geofence_interface failed, error = %s\n", __func__, error);
+        LOC_LOGE ("%s, dlsym for ulpInterface failed, error = %s\n", __func__, error);
         goto exit;
      }
 
@@ -545,6 +680,7 @@ exit:
     EXIT_LOG(%d, geofence_interface == NULL);
     return geofence_interface;
 }
+
 /*===========================================================================
 FUNCTION    loc_get_extension
 
@@ -561,36 +697,26 @@ SIDE EFFECTS
    N/A
 
 ===========================================================================*/
-const void* loc_get_extension(const char* name)
+static const void* loc_get_extension(const char* name)
 {
     ENTRY_LOG();
     const void* ret_val = NULL;
 
-   LOC_LOGD("%s:%d] For Interface = %s\n",__func__, __LINE__, name);
    if (strcmp(name, GPS_XTRA_INTERFACE) == 0)
    {
-       ret_val = &sLocEngXTRAInterface;
+      ret_val = &sLocEngXTRAInterface;
    }
+
    else if (strcmp(name, AGPS_INTERFACE) == 0)
    {
-       //Return an interface to AGPS only if MSA or MSB capabilities
-       //are present. If the target is an APQ, these masks are
-       //cleared in get_gps_interface() and the below logic will
-       //return NULL as the interface for AGPS
-       if((gps_conf.CAPABILITIES & GPS_CAPABILITY_MSA) ||
-          (gps_conf.CAPABILITIES & GPS_CAPABILITY_MSB) ) {
-           LOC_LOGD("%s:%d]: AGPS capabilities found\n", __func__, __LINE__);
-           ret_val = &sLocEngAGpsInterface;
-       }
-       else {
-           LOC_LOGD("%s:%d]: Returning NULL AgpsInterface\n", __func__, __LINE__);
-           ret_val = NULL;
-       }
+      ret_val = &sLocEngAGpsInterface;
    }
+
    else if (strcmp(name, GPS_NI_INTERFACE) == 0)
    {
-       ret_val = &sLocEngNiInterface;
+      ret_val = &sLocEngNiInterface;
    }
+
    else if (strcmp(name, AGPS_RIL_INTERFACE) == 0)
    {
        char baseband[PROPERTY_VALUE_MAX];
@@ -600,11 +726,30 @@ const void* loc_get_extension(const char* name)
            ret_val = &sLocEngAGpsRilInterface;
        }
    }
+#ifdef FEATURE_ULP
+   else if (strcmp(name, ULP_RAW_CMD_INTERFACE) == 0)
+   {
+      ret_val = &sLocEngInjectRawCmdInterface;
+   }
+   else if(strcmp(name, ULP_PHONE_CONTEXT_INTERFACE) == 0)
+   {
+     ret_val = &sLocEngUlpPhoneContextInterface;
+   }
+   else if(strcmp(name, ULP_NETWORK_INTERFACE) == 0)
+   {
+     //Return a valid value for ULP Network Interface only if ULP
+     //turned on in gps.conf
+     if(gps_conf.CAPABILITIES & ULP_CAPABILITY)
+         ret_val = &sUlpNetworkInterface;
+   }
+#endif
    else if (strcmp(name, GPS_GEOFENCING_INTERFACE) == 0)
    {
-       if ((gps_conf.CAPABILITIES | GPS_CAPABILITY_GEOFENCING) == gps_conf.CAPABILITIES ){
-           ret_val = get_geofence_interface();
-       }
+        if ((gps_conf.CAPABILITIES | GPS_CAPABILITY_GEOFENCING)
+                == gps_conf.CAPABILITIES)
+        {
+            ret_val = get_geofence_interface();
+        }
    }
    else
    {
@@ -633,7 +778,7 @@ SIDE EFFECTS
 static void loc_agps_init(AGpsCallbacks* callbacks)
 {
     ENTRY_LOG();
-    loc_eng_agps_init(loc_afw_data, (AGpsExtCallbacks*)callbacks);
+    loc_eng_agps_init(loc_afw_data, callbacks);
     EXIT_LOG(%s, VOID_RET);
 }
 
@@ -654,60 +799,25 @@ SIDE EFFECTS
    N/A
 
 ===========================================================================*/
+#ifdef FEATURE_IPV6
 static int loc_agps_open(const char* apn)
 {
     ENTRY_LOG();
-    AGpsType agpsType = AGPS_TYPE_SUPL;
-    AGpsBearerType bearerType = AGPS_APN_BEARER_IPV4;
-    int ret_val = loc_eng_agps_open(loc_afw_data, agpsType, apn, bearerType);
+    int ret_val = loc_eng_agps_open(loc_afw_data, AGPS_TYPE_ANY, apn, APN_IP_INVALID);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
-
-/*===========================================================================
-FUNCTION    loc_agps_open_with_apniptype
-
-DESCRIPTION
-   This function is called when on-demand data connection opening is successful.
-It should inform ARM 9 about the data open result.
-
-DEPENDENCIES
-   NONE
-
-RETURN VALUE
-   0
-
-SIDE EFFECTS
-   N/A
-
-===========================================================================*/
-static int  loc_agps_open_with_apniptype(const char* apn, ApnIpType apnIpType)
+#else
+static int loc_agps_open(const char* apn)
 {
     ENTRY_LOG();
-    AGpsType agpsType = AGPS_TYPE_SUPL;
-    AGpsBearerType bearerType;
-
-    switch (apnIpType) {
-        case APN_IP_IPV4:
-            bearerType = AGPS_APN_BEARER_IPV4;
-            break;
-        case APN_IP_IPV6:
-            bearerType = AGPS_APN_BEARER_IPV6;
-            break;
-        case APN_IP_IPV4V6:
-            bearerType = AGPS_APN_BEARER_IPV4V6;
-            break;
-        default:
-            bearerType = AGPS_APN_BEARER_IPV4;
-            break;
-    }
-
-    int ret_val = loc_eng_agps_open(loc_afw_data, agpsType, apn, bearerType);
+    int ret_val = loc_eng_agps_open(loc_afw_data, apn);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
+#endif
 
 /*===========================================================================
 FUNCTION    loc_agps_closed
@@ -726,15 +836,25 @@ SIDE EFFECTS
    N/A
 
 ===========================================================================*/
+#ifdef FEATURE_IPV6
 static int loc_agps_closed()
 {
     ENTRY_LOG();
-    AGpsType agpsType = AGPS_TYPE_SUPL;
-    int ret_val = loc_eng_agps_closed(loc_afw_data, agpsType);
+    int ret_val = loc_eng_agps_closed(loc_afw_data, AGPS_TYPE_ANY);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
+#else
+static int loc_agps_closed()
+{
+    ENTRY_LOG();
+    int ret_val = loc_eng_agps_closed(loc_afw_data);
+
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+#endif
 
 /*===========================================================================
 FUNCTION    loc_agps_open_failed
@@ -753,15 +873,25 @@ SIDE EFFECTS
    N/A
 
 ===========================================================================*/
+#ifdef FEATURE_IPV6
 int loc_agps_open_failed()
 {
     ENTRY_LOG();
-    AGpsType agpsType = AGPS_TYPE_SUPL;
-    int ret_val = loc_eng_agps_open_failed(loc_afw_data, agpsType);
+    int ret_val = loc_eng_agps_open_failed(loc_afw_data, AGPS_TYPE_ANY);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
+#else
+int loc_agps_open_failed()
+{
+    ENTRY_LOG();
+    int ret_val = loc_eng_agps_open_failed(loc_afw_data);
+
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+#endif
 
 /*===========================================================================
 FUNCTION    loc_agps_set_server
@@ -792,8 +922,6 @@ static int loc_agps_set_server(AGpsType type, const char* hostname, int port)
     case AGPS_TYPE_C2K:
         serverType = LOC_AGPS_CDMA_PDE_SERVER;
         break;
-    default:
-        serverType = LOC_AGPS_SUPL_SERVER;
     }
     int ret_val = loc_eng_set_server_proxy(loc_afw_data, serverType, hostname, port);
 
@@ -802,8 +930,35 @@ static int loc_agps_set_server(AGpsType type, const char* hostname, int port)
 }
 
 /*===========================================================================
-FUNCTIONf571
-    loc_xtra_init
+FUNCTION    loc_agps_open
+
+DESCRIPTION
+   This function is called when on-demand data connection opening is successful.
+It should inform ARM 9 about the data open result.
+
+DEPENDENCIES
+   NONE
+
+RETURN VALUE
+   0
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+#ifdef FEATURE_IPV6
+static int loc_agps_open_with_apn_type(const char* apn, ApnIpType bearerType)
+{
+    ENTRY_LOG();
+    int ret_val = loc_eng_agps_open(loc_afw_data, AGPS_TYPE_ANY, apn, bearerType);
+
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+#endif
+
+/*===========================================================================
+FUNCTION    loc_xtra_init
 
 DESCRIPTION
    Initialize XTRA module.
@@ -821,7 +976,7 @@ SIDE EFFECTS
 static int loc_xtra_init(GpsXtraCallbacks* callbacks)
 {
     ENTRY_LOG();
-    int ret_val = loc_eng_xtra_init(loc_afw_data, (GpsXtraExtCallbacks*)callbacks);
+    int ret_val = loc_eng_xtra_init(loc_afw_data, callbacks);
 
     EXIT_LOG(%d, ret_val);
     return ret_val;
@@ -847,12 +1002,8 @@ SIDE EFFECTS
 static int loc_xtra_inject_data(char* data, int length)
 {
     ENTRY_LOG();
-    int ret_val = -1;
-    if( (data != NULL) && ((unsigned int)length <= XTRA_DATA_MAX_SIZE))
-        ret_val = loc_eng_xtra_inject_data(loc_afw_data, data, length);
-    else
-        LOC_LOGE("%s, Could not inject XTRA data. Buffer address: %p, length: %d",
-                __func__, data, length);
+    int ret_val = loc_eng_xtra_inject_data(loc_afw_data, data, length);
+
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
@@ -876,7 +1027,7 @@ SIDE EFFECTS
 void loc_ni_init(GpsNiCallbacks *callbacks)
 {
     ENTRY_LOG();
-    loc_eng_ni_init(loc_afw_data,(GpsNiExtCallbacks*) callbacks);
+    loc_eng_ni_init(loc_afw_data, callbacks);
     EXIT_LOG(%s, VOID_RET);
 }
 
@@ -934,20 +1085,47 @@ static void loc_agps_ril_update_network_availability(int available, const char* 
     EXIT_LOG(%s, VOID_RET);
 }
 
-static void local_loc_cb(UlpLocation* location, void* locExt)
+#ifdef FEATURE_ULP
+/*===========================================================================
+FUNCTION    loc_inject_raw_command
+
+DESCRIPTION
+   This is used to send special test modem commands from the applications
+   down into the HAL
+DEPENDENCIES
+   N/A
+
+RETURN VALUE
+   0: success
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+static bool loc_inject_raw_command(char* command, int length)
 {
     ENTRY_LOG();
-    if (NULL != location) {
-        CALLBACK_LOG_CALLFLOW("location_cb - from", %d, location->position_source);
+    int ret_val = loc_eng_inject_raw_command(loc_afw_data, command, length);
+    EXIT_LOG(%s, loc_logger_boolStr[ret_val!=0]);
+    return ret_val;
+}
+#endif
 
-        if (NULL != gps_loc_cb) {
-            gps_loc_cb(&location->gpsLocation);
-        }
+static void loc_cb(GpsLocation* location, void* locExt)
+{
+    ENTRY_LOG();
+    if (NULL != gps_loc_cb && NULL != location) {
+#ifdef FEATURE_ULP
+        CALLBACK_LOG_CALLFLOW("location_cb - from", %d, location->position_source);
+#else
+        CALLBACK_LOG_CALLFLOW("location_cb - at", %llu, location->timestamp);
+#endif
+        gps_loc_cb(location);
     }
     EXIT_LOG(%s, VOID_RET);
 }
 
-static void local_sv_cb(GpsSvStatus* sv_status, void* svExt)
+static void sv_cb(GpsSvStatus* sv_status, void* svExt)
 {
     ENTRY_LOG();
     if (NULL != gps_sv_cb) {
@@ -956,3 +1134,159 @@ static void local_sv_cb(GpsSvStatus* sv_status, void* svExt)
     }
     EXIT_LOG(%s, VOID_RET);
 }
+
+#ifdef FEATURE_ULP
+/*===========================================================================
+FUNCTION loc_eng_get_ulp_inf
+
+DESCRIPTION
+   This function checks if ULP is enabled, and loads the libulp2.so and
+   returns its interface
+
+DEPENDENCIES
+   None
+
+RETURN VALUE
+   interface pointer to libulp: no error
+   NULL: errors
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+const ulpInterface * loc_eng_get_ulp_inf(void)
+{
+    ENTRY_LOG();
+    void *handle;
+    const char *error;
+    get_ulp_interface* get_ulp_inf;
+    const ulpInterface* loc_eng_ulpInf = NULL;
+
+    if (!(gps_conf.CAPABILITIES & ULP_CAPABILITY)) {
+       LOC_LOGD ("%s, ULP is not configured to be On in gps.conf\n", __func__);
+       goto exit;
+    }
+    dlerror();    /* Clear any existing error */
+
+    handle = dlopen ("libulp2.so", RTLD_NOW);
+
+    if (!handle)
+    {
+        if ((error = dlerror()) != NULL)  {
+            LOC_LOGE ("%s, dlopen for libulp.so failed, error = %s\n", __func__, error);
+           }
+        goto exit;
+    }
+    dlerror();    /* Clear any existing error */
+    get_ulp_inf = (get_ulp_interface*) dlsym(handle, "ulp_get_interface");
+    if ((error = dlerror()) != NULL)  {
+        LOC_LOGE ("%s, dlsym for ulpInterface failed, error = %s\n", __func__, error);
+        goto exit;
+     }
+
+    // Initialize the ULP interface
+    loc_eng_ulpInf = get_ulp_inf();
+
+exit:
+    EXIT_LOG(%d, loc_eng_ulpInf == NULL);
+    return loc_eng_ulpInf;
+}
+
+/*===========================================================================
+FUNCTION    loc_ulp_network_init
+
+DESCRIPTION
+   Initialize the ULP network interface.
+
+DEPENDENCIES
+   NONE
+
+RETURN VALUE
+   0
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+static int loc_ulp_phone_context_init(UlpPhoneContextCallbacks *callbacks)
+{
+    ENTRY_LOG();
+    int ret_val = loc_eng_ulp_phone_context_init(loc_afw_data, callbacks);
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+/*===========================================================================
+FUNCTION    loc_ulp_phone_context_settings_update
+
+DESCRIPTION
+   This is used to inform the ULP module of phone settings changes carried out
+   by the users
+DEPENDENCIES
+   N/A
+
+RETURN VALUE
+   0: success
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+
+static int loc_ulp_phone_context_settings_update(UlpPhoneContextSettings *settings)
+{
+    ENTRY_LOG();
+    int ret_val = -1;
+    ret_val = loc_eng_ulp_phone_context_settings_update(loc_afw_data, settings);
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+
+/*===========================================================================
+FUNCTION    loc_ulp_network_init
+
+DESCRIPTION
+   Initialize the ULP network interface.
+
+DEPENDENCIES
+   NONE
+
+RETURN VALUE
+   0
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+static int loc_ulp_network_init(UlpNetworkLocationCallbacks *callbacks)
+{
+   ENTRY_LOG();
+   int ret_val = loc_eng_ulp_network_init(loc_afw_data, callbacks);
+   EXIT_LOG(%d, ret_val);
+   return ret_val;
+}
+
+/*===========================================================================
+FUNCTION    loc_eng_ulp_send_network_position
+
+DESCRIPTION
+   Ulp send data
+
+DEPENDENCIES
+   NONE
+
+RETURN VALUE
+   0
+
+SIDE EFFECTS
+   N/A
+
+===========================================================================*/
+int loc_ulp_send_network_position(UlpNetworkPositionReport *position_report)
+{
+    ENTRY_LOG();
+    int ret_val = -1;
+    ret_val = loc_eng_ulp_send_network_position(loc_afw_data, position_report);
+    EXIT_LOG(%d, ret_val);
+    return ret_val;
+}
+#endif
