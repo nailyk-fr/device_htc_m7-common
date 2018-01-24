@@ -16,7 +16,6 @@
      limitations under the License.
 -->
 <resources>
-
     <!-- Default values for display color temperature -->
     <integer name="config_dayColorTemperature">7000</integer>
     <integer name="config_nightColorTemperature">4000</integer>
@@ -97,5 +96,4 @@
          sdk/src/java/org/lineageos/internal/util/DeviceKeysConstants.java.
     -->
     <integer name="config_doubleTapOnHomeBehavior">2</integer>
-
 </resources>
