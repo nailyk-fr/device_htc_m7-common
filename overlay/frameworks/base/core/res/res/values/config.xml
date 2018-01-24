@@ -111,6 +111,9 @@
          notification_pulse_length_values in LineageParts -->
     <integer name="config_defaultNotificationLedOff">2</integer>
 
+    <!-- Is the notification LED intrusive? Used to decide if there should be a disable option -->
+    <bool name="config_intrusiveNotificationLed">true</bool>
+
     <!-- disable menu hard key in non-pattern lockscreen -->
     <bool name="config_disableMenuKeyInLockScreen">true</bool>
 
