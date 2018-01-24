@@ -1,7 +1,7 @@
 # Executables
 bin/akmd
 bin/ks
-bin/mm-qcamera-daemon
+vendor/bin/mm-qcamera-daemon
 bin/mpdecision
 bin/radish
 bin/thermald
