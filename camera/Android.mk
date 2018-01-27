@@ -6,7 +6,7 @@ LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 
 LOCAL_SRC_FILES := \
-     gui/SensorManager.cpp \
+     sensor/SensorManager.cpp \
      ui/GraphicBuffer.cpp \
      ui/GraphicBufferAllocator.cpp \
      ui/GraphicBufferMapper.cpp
@@ -23,8 +23,11 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES += \
+    system/core/include \
+    system/core/base/include \
     framework/native/include \
-    system/media/camera/include
+    system/media/camera/include \
+    frameworks/native/libs/nativebase/include
 
 LOCAL_SRC_FILES := \
     CameraWrapper.cpp
