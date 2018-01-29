@@ -1,5 +1,0 @@
-allow hal_gatekeeper_default debugfs:file { open write };
-allow hal_gatekeeper_default sysfs:file { getattr open read };
-allow hal_gatekeeper_default unlabeled:file { execute getattr open read };
-
-

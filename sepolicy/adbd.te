@@ -1,3 +1,0 @@
-allow adbd sysfs:file { getattr open read };
-allow adbd debugfs:file { open w_file_perms };
-

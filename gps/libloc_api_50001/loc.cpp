@@ -30,7 +30,7 @@
 #define LOG_NDDEBUG 0
 #define LOG_TAG "LocSvc_afw"
 
-#include <hardware/gps.h>
+#include "gps.h"
 #include <dlfcn.h>
 #include <loc_eng.h>
 #include <loc_log.h>
@@ -946,7 +946,6 @@ SIDE EFFECTS
    N/A
 
 ===========================================================================*/
-#ifdef FEATURE_IPV6
 static int loc_agps_open_with_apn_type(const char* apn, ApnIpType bearerType)
 {
     ENTRY_LOG();
@@ -955,7 +954,6 @@ static int loc_agps_open_with_apn_type(const char* apn, ApnIpType bearerType)
     EXIT_LOG(%d, ret_val);
     return ret_val;
 }
-#endif
 
 /*===========================================================================
 FUNCTION    loc_xtra_init

@@ -6,7 +6,7 @@ LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 LOCAL_ADDITIONAL_DEPENDENCIES := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 
 LOCAL_SRC_FILES := \
-     sensor/SensorManager.cpp \
+     sensor/SensorManager.cpp  \
      ui/GraphicBuffer.cpp \
      ui/GraphicBufferAllocator.cpp \
      ui/GraphicBufferMapper.cpp
@@ -16,39 +16,34 @@ LOCAL_SHARED_LIBRARIES := \
 
 LOCAL_MODULE := libcamera_shim
 LOCAL_MODULE_TAGS := optional
-LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES += \
-    system/core/include \
-    system/core/base/include \
     framework/native/include \
-    system/media/camera/include \
-    frameworks/native/libs/nativebase/include
+    system/media/camera/include
 
 LOCAL_SRC_FILES := \
     CameraWrapper.cpp
+
+LOCAL_STATIC_LIBRARIES := \
+    libarect \
+    libbase
 
 LOCAL_SHARED_LIBRARIES := \
     libhardware \
     liblog \
     libcamera_client \
-    libgui \
-    libhidltransport \
-    libsensor \
     libutils \
     libcutils \
     libdl \
-    libbase \
+    libgui \
+    libhidltransport \
+    libsensor \
     android.hidl.token@1.0-utils \
     android.hardware.graphics.bufferqueue@1.0
-
-LOCAL_STATIC_LIBRARIES := \
-    libarect \
-    libbase
 
 LOCAL_HEADER_LIBRARIES := libnativebase_headers
 

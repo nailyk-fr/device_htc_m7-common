@@ -1,2 +1,0 @@
-allow vdc sysfs:file { getattr open read };
-

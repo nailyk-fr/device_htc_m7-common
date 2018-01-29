@@ -22,7 +22,6 @@ LOCAL_SRC_FILES := \
 LOCAL_SHARED_LIBRARIES := libicuuc libicui18n
 LOCAL_MODULE := libqc-opt_shim
 LOCAL_MODULE_TAGS := optional
-LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -45,7 +44,6 @@ LOCAL_SRC_FILES := \
 LOCAL_SHARED_LIBRARIES := libstagefright_foundation
 LOCAL_MODULE := libshim_wvm
 LOCAL_MODULE_TAGS := optional
-LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -56,7 +54,6 @@ LOCAL_SRC_FILES := \
 
 LOCAL_MODULE := libshim_ril
 LOCAL_MODULE_TAGS := optional
-LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -67,6 +64,5 @@ LOCAL_SRC_FILES := \
 
 LOCAL_MODULE := libshim_atomic
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
-LOCAL_PROPRIETARY_MODULE := true
 
 include $(BUILD_SHARED_LIBRARY)

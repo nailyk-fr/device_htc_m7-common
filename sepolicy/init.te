@@ -1,16 +1,13 @@
-userdebug_or_eng(`
-allow init self:netlink_kobject_uevent_socket read;
-')
 allow init vendor_file:file execmod;
 allow init camera_sysfs:file rw_file_perms;
 allow init debugfs:file write;
 allow init vibeamp_sysfs:file rw_file_perms;
 allow init self:netlink_socket write;
-allow init self:netlink_route_socket read;
 allow init self:udp_socket ioctl;
 allow init system_file:file execute_no_trans;
 
 # Requied to load shim libs
+allow init { domain -lmkd -crash_dump }:process noatsecure;
 allow init cameraserver:process { noatsecure };
 allow init hal_camera:process { noatsecure };
 allow init mm-qcamerad:process { noatsecure };

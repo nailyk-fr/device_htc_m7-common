@@ -1,2 +1,0 @@
-allow shell sysfs:file { getattr open read };
-

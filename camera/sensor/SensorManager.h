@@ -17,22 +17,15 @@
 #ifndef ANDROID_GUI_SENSOR_MANAGER_H
 #define ANDROID_GUI_SENSOR_MANAGER_H
 
-#include <map>
-#include <unordered_map>
-
 #include <stdint.h>
 #include <sys/types.h>
 
 #include <binder/IBinder.h>
-#include <binder/IPCThreadState.h>
-#include <binder/IServiceManager.h>
 
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
-#include <utils/StrongPointer.h>
 #include <utils/Singleton.h>
 #include <utils/Vector.h>
-#include <utils/String8.h>
 
 #include <sensor/SensorEventQueue.h>
 

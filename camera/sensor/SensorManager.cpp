@@ -21,7 +21,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <cutils/native_handle.h>
 #include <utils/Errors.h>
 #include <utils/RefBase.h>
 #include <utils/Singleton.h>
