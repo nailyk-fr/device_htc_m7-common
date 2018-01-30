@@ -4,4 +4,3 @@ type audioserver_device, dev_type;
 type mdm_helper_device, dev_type;
 type mpdecision_socket_device, dev_type;
 type mm-qcamerad_device, dev_type;
-type video_device, dev_type, sysfs_type;
