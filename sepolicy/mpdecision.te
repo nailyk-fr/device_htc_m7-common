@@ -1,5 +1,15 @@
+allow mpdecision self:netlink_kobject_uevent_socket { create setopt bind read };
+
+allow mpdecision mpdecision_socket:dir w_dir_perms;
+allow mpdecision mpdecision_socket:sock_file create_file_perms;
+
+type_transition mpdecision socket_device:sock_file mpdecision_socket;
+allow mpdecision socket_device:dir w_dir_perms;
+
 allow mpdecision sysfs:file rw_file_perms;
 allow mpdecision system_data_file:dir w_dir_perms;
 type_transition mpdecision socket_device:sock_file mpctl_socket;
 type_transition mpdecision system_data_file:file mpctl_data_file;
 
+r_dir_file(mpdecision, mediaserver)
+r_dir_file(mpdecision, cameraserver)

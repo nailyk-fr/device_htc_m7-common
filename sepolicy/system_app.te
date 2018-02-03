@@ -1,7 +1,8 @@
-allow system_app wificond:binder call;
-allow system_app installd:binder call;
-allow system_app netd:binder call;
-allow system_app storaged:binder call;
+binder call(system_app, wificond);
+binder call(system_app, installd);
+binder call(system_app, netd);
+binder call(system_app, storaged);
+
 allow system_app qemu_hw_mainkeys_prop:file { getattr open };
 allow system_app su_exec:file getattr;
 

@@ -1,9 +1,17 @@
+allow init self:netlink_socket write;
+allow init self:netlink_kobject_uevent_socket read;
+allow init self:netlink_route_socket read;
+allow init self:udp_socket ioctl;
+
+allow init device:chr_file { ioctl open read write };
+allow init video_device:chr_file { ioctl write };
+allow init ion_device:chr_file ioctl;
+
 allow init vendor_file:file execmod;
 allow init camera_sysfs:file rw_file_perms;
-allow init debugfs:file write;
+allow init debugfs_trace_marker:file getattr;
+allow init debugfs:file w_file_perms;
 allow init vibeamp_sysfs:file rw_file_perms;
-allow init self:netlink_socket write;
-allow init self:udp_socket ioctl;
 allow init system_file:file execute_no_trans;
 
 # Requied to load shim libs

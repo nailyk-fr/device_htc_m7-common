@@ -1,0 +1,3 @@
+allow shell kernel:system syslog_read;
+allow shell sysfs:file { getattr open read };
+

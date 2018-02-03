@@ -1,3 +1,9 @@
 allow netmgrd self:capability dac_override;
 allow netmgrd shell_exec:file { execute execute_no_trans getattr open read };
+allow netmgrd toolbox_exec:file rx_file_perms;
 allow netmgrd toolbox_exec:file { execute execute_no_trans getattr open read };
+allow netmgrd system_file:file rx_file_perms;
+allow netmgrd vendor_file_type:file rx_file_perms;
+allow netmgrd system_file:file lock;
+
+set_prop(netmgrd, debug_prop)
