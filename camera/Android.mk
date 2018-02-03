@@ -22,6 +22,7 @@ include $(BUILD_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES += \
+    $(LOCAL_PATH)/../include \
     framework/native/include \
     system/media/camera/include
 
@@ -39,9 +40,6 @@ LOCAL_SHARED_LIBRARIES := \
     libutils \
     libcutils \
     libdl \
-    libgui \
-    libhidltransport \
-    libsensor \
     android.hidl.token@1.0-utils \
     android.hardware.graphics.bufferqueue@1.0
 
