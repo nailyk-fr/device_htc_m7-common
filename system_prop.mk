@@ -51,8 +51,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.vendor.extension_library=/system/vendor/lib/libqc-opt.so
 
 # OMX properties
-PRODUCT_PROPERTY_OVERRIDES += \
-    persist.media.treble_omx=false
+#PRODUCT_PROPERTY_OVERRIDES += \
+#    persist.media.treble_omx=false
 
 # Net
 PRODUCT_PROPERTY_OVERRIDES += \
