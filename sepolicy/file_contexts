@@ -78,13 +78,3 @@
 /sys/devices/virtual/graphics/fb1/hpd                  -- u:object_r:surfaceflinger_sysfs:s0
 /sys/devices/virtual/graphics/fb1/product_description  -- u:object_r:surfaceflinger_sysfs:s0
 /sys/devices/virtual/graphics/fb1/vendor_name          -- u:object_r:surfaceflinger_sysfs:s0
-
-###################################
-# Lights
-#
-/system/vendor/bin/hw/android\.hardware\.light@2\.0-service\.htc_msm8960             u:object_r:hal_light_default_exec:s0
-
-###################################
-# Sysfs nodes
-#
-/sys/devices/leds-qpnp-(.*)?/leds(/.*)?                                              u:object_r:sysfs_leds:s0
