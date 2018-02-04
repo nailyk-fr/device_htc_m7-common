@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<mms_config version="4">
-    <!-- User-Agent parameter used in MMS http request -->
-    <string name="userAgent">HTC6500LVW</string>
-
-    <!-- UAProf URL -->
-    <string name="uaProfUrl">http://uaprof.vtext.com/htc/htc6500lvw/htc6500lvw.xml</string>
-</mms_config>
