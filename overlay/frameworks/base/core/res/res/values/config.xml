@@ -46,9 +46,11 @@
          <item>"bluetooth,7,7,2,-1,true"</item>
    </string-array>
 
-    <!-- This string array should be overridden by the device to present a list of network
+    <!-- This string array should be overridden by the device to present a list of radio
          attributes.  This is used by the connectivity manager to decide which networks can coexist
          based on the hardware -->
+    <!-- An Array of "[ConnectivityManager connectionType],
+                      [# simultaneous connection types]"  -->
     <string-array translatable="false" name="radioAttributes">
         <item>"1,1"</item>
         <item>"0,1"</item>
@@ -77,14 +79,47 @@
            <item>"bt-pan"</item>
     </string-array>
 
-    <!-- Array of ConnectivityManager.TYPE_xxxx values allowable for tethering -->
-    <!-- Common options are [1, 4] for TYPE_WIFI and TYPE_MOBILE_DUN or
-    <!== [0,1,5,7] for TYPE_MOBILE, TYPE_WIFI, TYPE_MOBILE_HIPRI and TYPE_BLUETOOTH -->
+    <!-- Array of ConnectivityManager.TYPE_xxxx values allowable for tethering.
+
+         Common options are [1, 4] for TYPE_WIFI and TYPE_MOBILE_DUN or
+         [1,7,0] for TYPE_WIFI, TYPE_BLUETOOTH, and TYPE_MOBILE.
+
+         This list is also modified by code within the framework, including:
+
+             - TYPE_ETHERNET (9) is prepended to this list, and
+
+             - the return value of TelephonyManager.getTetherApnRequired()
+               determines how the array is further modified:
+
+                   * DUN_REQUIRED
+                     TYPE_MOBILE is removed (if present)
+                     TYPE_MOBILE_HIPRI is removed (if present)
+                     TYPE_MOBILE_DUN is appended (if not already present)
+
+                   * DUN_NOT_REQUIRED
+                     TYPE_MOBILE_DUN is removed (if present)
+                     TYPE_MOBILE is appended (if not already present)
+                     TYPE_MOBILE_HIPRI is appended (if not already present)
+
+                   * DUN_UNSPECIFIED
+                     if any of TYPE_MOBILE{,_DUN,_HIPRI} are present:
+                         change nothing
+                     else:
+                         TYPE_MOBILE is appended
+                         TYPE_MOBILE_HIPRI is appended
+
+         For other changes applied to this list, now and in the future, see
+         com.android.server.connectivity.tethering.TetheringConfiguration.
+
+         Note also: the order of this is important. The first upstream type
+         for which a satisfying network exists is used.
+      -->
     <integer-array translatable="false" name="config_tether_upstream_types">
         <item>0</item>
         <item>1</item>
         <item>5</item>
         <item>7</item>
+        <item>9</item>
     </integer-array>
 
     <!-- Boolean indicating whether the wifi chipset has dual frequency band support -->
@@ -155,7 +190,9 @@
         <item>2601</item>
     </integer-array>
 
-    <!-- Minimum screen brightness allowed by the power manager. -->
+    <!-- Screen brightness used to dim the screen when the user activity
+         timeout expires.  May be less than the minimum allowed brightness setting
+         that can be set by the user. -->
     <integer name="config_screenBrightnessDim">10</integer>
 
     <!-- Array of output values for LCD backlight corresponding to the LUX values
@@ -247,6 +284,19 @@
          state changes. Voice radio tech change will always trigger an update of
          phone object irrespective of this config -->
     <bool name="config_switch_phone_on_voice_reg_state_change">false</bool>
+
+    <!-- The VoiceMail default value is displayed to my own number if it is true -->
+    <bool name="config_telephony_use_own_number_for_voicemail">true</bool>
+
+    <!-- If this value is true, Sms encoded as octet is decoded by utf8 decoder.
+         If false, decoded by Latin decoder. -->
+    <bool name="config_sms_utf8_support">true</bool>
+
+    <!-- Default network policy warning threshold, in megabytes. -->
+    <integer name="config_networkPolicyDefaultWarning">51200</integer>
+
+    <!-- For some operators, PDU has garbages. To fix it, need to use valid index -->
+    <integer name="config_valid_wappush_index">4</integer>
      
     <!-- ComponentName of a dream to show whenever the system would otherwise have
          gone to sleep.  When the PowerManager is asked to go to sleep, it will instead
@@ -286,4 +336,27 @@
          Refer to power.h for details.
     -->
     <bool name="config_powerDecoupleInteractiveModeFromDisplay">true</bool>
+
+    <!-- If there is no preload VM number in the sim card, carriers such as
+         Verizon require to load a default vm number from the configurantion.
+         Define config_default_vm_number for this purpose. And there are two
+         optional formats for this configuration as below:
+         (1)<item>voicemail number</item>
+         (2)<item>voicemail number;gid</item>
+         The logic to pick up the correct voicemail number:
+         (1) If the config_default_vm_number array has no gid special item, the last one will be
+         picked
+         (2) If the config_default_vm_number array has gid special item and  it matches the current
+         sim's gid, it will be picked.
+         (3) If the config_default_vm_number array has gid special item but it doesn't match the
+         current sim's gid, the last one without gid will be picked -->
+    <string-array translatable="false" name="config_default_vm_number" />
+        <item>*86</item>
+    </string-array>
+
+    <!-- Sprint need a 70 ms delay for 3way call -->
+    <integer name="config_cdma_3waycall_flash_delay">70</integer>
+
+        <!-- Use ERI text for network name on CDMA LTE -->
+    <bool name="config_LTE_eri_for_network_name">true</bool>
 </resources>
