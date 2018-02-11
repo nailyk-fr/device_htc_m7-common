@@ -37,21 +37,7 @@
 const char KEY_VIDEO_HDR[] = "video-hdr";
 const char KEY_VIDEO_HDR_VALUES[] = "video-hdr-values";
 
-// Wrapper common specific parameters names
-const char KEY_CAPTURE_MODE[] = "capture-mode";
-const char KEY_FACE_DETECTION[] = "face-detection";
-const char KEY_SUPPORTED_DENOISE[] = "denoise-values";
-const char KEY_CONTIBURST_TYPE[] = "contiburst-type";
-const char KEY_OIS_SUPPORT[] = "ois_support";
-const char KEY_OIS_MODE[] = "ois_mode";
-const char KEY_ZSL[] = "zsl";
-const char SCENE_MODE_HDR[] = "hdr";
-const char KEY_SCENE_MODE[] = "scene-mode";
-const char KEY_CAMERA_MODE[] = "camera-mode";
-
-using namespace android;
-
-static Mutex gCameraWrapperLock;
+static android::Mutex gCameraWrapperLock;
 static camera_module_t *gVendorModule = 0;
 
 static camera_notify_callback gUserNotifyCb = NULL;
@@ -68,7 +54,7 @@ static int camera_get_number_of_cameras(void);
 static int camera_get_camera_info(int camera_id, struct camera_info *info);
 
 static struct hw_module_methods_t camera_module_methods = {
-    .open = camera_device_open
+    .open = camera_device_open,
 };
 
 camera_module_t HAL_MODULE_INFO_SYM = {
@@ -78,7 +64,7 @@ camera_module_t HAL_MODULE_INFO_SYM = {
          .hal_api_version = HARDWARE_HAL_API_VERSION,
          .id = CAMERA_HARDWARE_MODULE_ID,
          .name = "M7 Camera Wrapper",
-         .author = "The CyanogenMod Project",
+         .author = "The LineageOS Project",
          .methods = &camera_module_methods,
          .dso = NULL, /* remove compilation warnings */
          .reserved = {0}, /* remove compilation warnings */
@@ -127,16 +113,16 @@ static char *camera_fixup_getparams(int id, const char *settings)
     const char *captureMode = "normal";
     const char *videoHdr = "false";
 
-    CameraParameters params;
-    params.unflatten(String8(settings));
+    android::CameraParameters params;
+    params.unflatten(android::String8(settings));
 
 #if !LOG_NDEBUG
     ALOGV("%s: original parameters:", __FUNCTION__);
     params.dump();
 #endif
 
-    if (params.get(KEY_CAPTURE_MODE)) {
-        captureMode = params.get(KEY_CAPTURE_MODE);
+    if (params.get(android::CameraParameters::KEY_CAPTURE_MODE)) {
+        captureMode = params.get(android::CameraParameters::KEY_CAPTURE_MODE);
     }
 
     if (params.get(android::CameraParameters::KEY_ROTATION)) {
@@ -150,10 +136,10 @@ static char *camera_fixup_getparams(int id, const char *settings)
     /* Disable face detection */
     params.set(android::CameraParameters::KEY_MAX_NUM_DETECTED_FACES_HW, "0");
     params.set(android::CameraParameters::KEY_MAX_NUM_DETECTED_FACES_SW, "0");
-    params.set(KEY_FACE_DETECTION, "off");
+    params.set(android::CameraParameters::KEY_FACE_DETECTION, "off");
 
     /* Disable denoise */
-    params.remove(KEY_SUPPORTED_DENOISE);
+    params.remove(android::CameraParameters::KEY_SUPPORTED_DENOISE);
 
     /* Advertise video HDR values */
     params.set(KEY_VIDEO_HDR_VALUES, "off,on");
@@ -186,8 +172,8 @@ static char *camera_fixup_getparams(int id, const char *settings)
 
     /* Set HDR mode */
     if (!strcmp(captureMode, "hdr")) {
-        params.set(KEY_SCENE_MODE,
-                SCENE_MODE_HDR);
+        params.set(android::CameraParameters::KEY_SCENE_MODE,
+                android::CameraParameters::SCENE_MODE_HDR);
     }
 
     /* Set sensor parameters */
@@ -217,8 +203,8 @@ static char *camera_fixup_setparams(int id, const char *settings)
     const char *sceneMode = "auto";
     const char *videoHdr = "false";
 
-    CameraParameters params;
-    params.unflatten(String8(settings));
+    android::CameraParameters params;
+    params.unflatten(android::String8(settings));
 
 #if !LOG_NDEBUG
     ALOGV("%s: original parameters:", __FUNCTION__);
@@ -240,10 +226,10 @@ static char *camera_fixup_setparams(int id, const char *settings)
     /* Disable face detection */
     params.set(android::CameraParameters::KEY_MAX_NUM_DETECTED_FACES_HW, "0");
     params.set(android::CameraParameters::KEY_MAX_NUM_DETECTED_FACES_SW, "0");
-    params.set(KEY_FACE_DETECTION, "off");
+    params.set(android::CameraParameters::KEY_FACE_DETECTION, "off");
 
     /* Disable denoise */
-    params.remove(KEY_SUPPORTED_DENOISE);
+    params.remove(android::CameraParameters::KEY_SUPPORTED_DENOISE);
 
     /* Enable fixed fps mode */
     params.set("preview-frame-rate-mode", "frame-rate-fixed");
@@ -259,18 +245,18 @@ static char *camera_fixup_setparams(int id, const char *settings)
 
     if (!isVideo && id == 0) {
         /* Disable OIS, set continuous burst to prevent crash */
-        params.set(KEY_CONTIBURST_TYPE, "unlimited");
-        params.set(KEY_OIS_SUPPORT, "false");
-        params.set(KEY_OIS_MODE, "off");
+        params.set(android::CameraParameters::KEY_CONTIBURST_TYPE, "unlimited");
+        params.set(android::CameraParameters::KEY_OIS_SUPPORT, "false");
+        params.set(android::CameraParameters::KEY_OIS_MODE, "off");
 
         /* Enable HDR */
-        if (!strcmp(sceneMode, SCENE_MODE_HDR)) {
-            params.set(KEY_SCENE_MODE, "off");
-            params.set(KEY_CAPTURE_MODE, "hdr");
+        if (!strcmp(sceneMode, android::CameraParameters::SCENE_MODE_HDR)) {
+            params.set(android::CameraParameters::KEY_SCENE_MODE, "off");
+            params.set(android::CameraParameters::KEY_CAPTURE_MODE, "hdr");
         } else {
-            params.set(KEY_CAPTURE_MODE, "normal");
-            params.set(KEY_ZSL, "on");
-            params.set(KEY_CAMERA_MODE, "1");
+            params.set(android::CameraParameters::KEY_CAPTURE_MODE, "normal");
+            params.set(android::CameraParameters::KEY_ZSL, "on");
+            params.set(android::CameraParameters::KEY_CAMERA_MODE, "1");
         }
     }
 
@@ -324,7 +310,7 @@ void camera_data_cb_timestamp(nsecs_t timestamp, int32_t msg_type,
 }
 
 camera_memory_t* camera_get_memory(int fd, size_t buf_size,
-        uint_t num_bufs, void *user) {
+       uint_t num_bufs, void *user) {
     return gUserGetMemory(fd, buf_size, num_bufs, gUserCameraDevice);
 }
 
@@ -554,7 +540,7 @@ static char *camera_get_parameters(struct camera_device *device)
     return params;
 }
 
-static void camera_put_parameters(struct camera_device *device __unused, char *params)
+static void camera_put_parameters(struct camera_device *device, char *params)
 {
     if (params)
         free(params);

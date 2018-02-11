@@ -4,7 +4,12 @@ allow mediaserver vendor_file:file execmod;
 allow mediaserver system_file:file execmod;
 
 allow mediaserver hal_camera_default:binder { call transfer };
+
+
 allow mediaserver self:netlink_kobject_uevent_socket { bind create getopt read setopt };
+allow mediaserver init:unix_dgram_socket sendto;
+allow mediaserver system_server:unix_stream_socket { read write };
+allow mediaserver system_data_file:sock_file write;
 
 unix_socket_send(mediaserver, camera, mm-qcamerad)
 unix_socket_send(mediaserver, mpdecision, mpdecision)
@@ -19,8 +24,6 @@ allow mediaserver ion_debugfs:file r_file_perms;
 allow mediaserver tee_device:chr_file rw_file_perms;
 allow mediaserver sensorservice_service:service_manager find;
 allow mediaserver system_server:service_manager find;
-allow mediaserver system_server:unix_stream_socket { read write };
-allow mediaserver system_data_file:sock_file write;
 
 allow mediaserver mediaserver:fd use;
 

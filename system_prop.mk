@@ -21,8 +21,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.cam.hw.version=m7 \
     camera2.portability.force_api=1 \
     media.stagefright.legacyencoder=true \
-    media.stagefright.less-secure=true
-#    camera.disable_treble=1
+    media.stagefright.less-secure=true \
+    camera.disable_treble=1
 
 # Display
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -61,8 +61,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # Radio
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.baseband.arch=mdm \
-    ro.telephony.call_ring.multiple=0
-#    ro.telephony.ril_class=HTCQualcommRIL
+    ro.telephony.call_ring.multiple=0 \
+    ro.telephony.ril_class=HTCQualcommRIL
 
 # Time services
 PRODUCT_PROPERTY_OVERRIDES += \

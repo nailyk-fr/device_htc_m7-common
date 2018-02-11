@@ -4,6 +4,7 @@ allow priv_app ffs_prop:property_service set;
 allow priv_app device:dir r_dir_perms;
 allow priv_app proc_interrupts:file r_file_perms;
 
-allow priv_app camera_prop:file { getattr open };
-allow priv_app camera_prop:file r_flie_perms;
+allow priv_app camera_prop:file { getattr open read };
 allow priv_app qemu_hw_mainkeys_prop:file { getattr open };
+
+
