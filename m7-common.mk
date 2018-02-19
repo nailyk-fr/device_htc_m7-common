@@ -57,8 +57,7 @@ PRODUCT_COPY_FILES += \
 
 # APKs
 PRODUCT_PACKAGES += \
-    CMFileManager \
-    AICP_OTA
+    CMFileManager
 
 # Power
 PRODUCT_PACKAGES += \
