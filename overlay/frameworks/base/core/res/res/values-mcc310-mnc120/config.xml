@@ -21,29 +21,34 @@
      for different hardware and product builds. -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
-    <!-- The VoiceMail default value is displayed to my own number if it is true -->
-    <bool name="config_telephony_use_own_number_for_voicemail">true</bool>
+    <!-- If this value is true, The mms content-disposition field is supported correctly.
+         If false, Content-disposition fragments are ignored -->
+    <bool name="config_mms_content_disposition_support">true</bool>
 
-    <!-- Array of ConnectivityManager.TYPE_xxxx values allowable for tethering -->
-    <!-- Common options are [1, 4] for TYPE_WIFI and TYPE_MOBILE_DUN or
-    <!== [0,1,5,7] for TYPE_MOBILE, TYPE_WIFI, TYPE_MOBILE_HIPRI and TYPE_BLUETOOTH -->
-    <integer-array translatable="false" name="config_tether_upstream_types">
-        <item>1</item>
-        <item>4</item>
-        <item>7</item>
-        <item>9</item>
+    <!-- An array of CDMA roaming indicators which means international roaming -->
+    <integer-array translatable="false" name="config_cdma_international_roaming_indicators" >
+        <item>2</item>
+        <item>74</item>
+        <item>124</item>
+        <item>125</item>
+        <item>126</item>
+        <item>157</item>
+        <item>158</item>
+        <item>159</item>
+        <item>193</item>
+        <item>194</item>
+        <item>195</item>
+        <item>196</item>
+        <item>197</item>
+        <item>198</item>
+        <item>228</item>
+        <item>229</item>
+        <item>230</item>
+        <item>231</item>
+        <item>232</item>
+        <item>233</item>
+        <item>234</item>
+        <item>235</item>
     </integer-array>
-
-    <!-- Default network policy warning threshold, in megabytes. -->
-    <integer name="config_networkPolicyDefaultWarning">51200</integer>
-
-    <!-- Sometimes, PDU has garbages. So, need to use valid index -->
-    <integer name="config_valid_wappush_index">4</integer>
-
-    <!-- sms encoded as octet is decoded by utf8 decoder. if it is true -->
-    <bool name="config_sms_utf8_support">true</bool>
-
-    <!-- Sprint need a 3s delay for 3way call -->
-    <integer name="config_cdma_3waycall_flash_delay">300</integer>
 
 </resources>

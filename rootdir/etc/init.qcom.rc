@@ -12,7 +12,9 @@ on early-init
     mkdir /firmware/mdm 0771 system system
     mkdir /firmware/q6 0771 system system  
 
-    mount debugfs /sys/kernel/debug /sys/kernel/debug
+    mount debugfs debugfs /sys/kernel/debug
+    chmod 0755 /sys/kernel/debug
+
     chown system system /sys/kernel/debug/kgsl/proc
 
 on init
@@ -221,6 +223,10 @@ on post-fs-data
 
     # communicate with mpdecision and thermald
     mkdir /dev/socket/mpdecision 2770 root system
+
+    # NFC local data and nfcee xml storage
+    mkdir /data/nfc 0770 nfc nfc
+    mkdir /data/nfc/param 0770 nfc nfc
 
     # GPS
     mkdir /data/misc/location 0770 gps gps

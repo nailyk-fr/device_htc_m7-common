@@ -16,7 +16,7 @@
 
 #define LOG_TAG "Sensors"
 
-#include <sensor/SensorManager.h>
+#include <gui/SensorManager.h>
 
 #include <stdint.h>
 #include <sys/types.h>

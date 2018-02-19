@@ -632,8 +632,12 @@ RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responsel
         int rwlockRet = pthread_rwlock_rdlock(radioServiceRwlockPtr);
         assert(rwlockRet == 0);
 
-        ret = pRI->pCI->responseFunction((int) socket_id,
-                responseType, pRI->token, e, response, responselen);
+        if (pRI->pCI->responseFunction) {
+            ret = pRI->pCI->responseFunction((int) socket_id,
+                    responseType, pRI->token, e, response, responselen);
+        } else {
+            RLOGE ("No unsolicited response function defined for token %d", pRI->token);
+        }
 
         rwlockRet = pthread_rwlock_unlock(radioServiceRwlockPtr);
         assert(rwlockRet == 0);
@@ -754,8 +758,14 @@ void RIL_onUnsolicitedResponse(int unsolResponse, const void *data,
             case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED:
                 unsolResponse = RIL_UNSOL_VOICE_RADIO_TECH_CHANGED;
                 break;
+            case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED:
+                unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
+                break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED_HTC:
                 unsolResponse = RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED;
+                break;
+            case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
+                unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
                 break;
             default:
                 RLOGE("unsupported unsolicited response code %d", unsolResponse);
@@ -793,9 +803,11 @@ void RIL_onUnsolicitedResponse(int unsolResponse, const void *data,
     int rwlockRet = pthread_rwlock_rdlock(radioServiceRwlockPtr);
     assert(rwlockRet == 0);
 
-    ret = s_unsolResponses[unsolResponseIndex].responseFunction(
-            (int) soc_id, responseType, 0, RIL_E_SUCCESS, const_cast<void*>(data),
-            datalen);
+    if (s_unsolResponses[unsolResponseIndex].responseFunction) {
+        ret = s_unsolResponses[unsolResponseIndex].responseFunction(
+                (int) soc_id, responseType, 0, RIL_E_SUCCESS, const_cast<void*>(data),
+                datalen);
+    }
 
     rwlockRet = pthread_rwlock_unlock(radioServiceRwlockPtr);
     assert(rwlockRet == 0);

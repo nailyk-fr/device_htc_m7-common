@@ -11,6 +11,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     audio.offload.disable=1 \
     persist.audio.fluence.speaker=true \
     persist.audio.fluence.voicecall=true \
+    persist.audio.fluence.voicecomm=true \
     persist.audio.fluence.voicerec=false \
     ro.qc.sdk.audio.fluencetype=fluence \
     use.dedicated.device.for.voip=true \
@@ -22,7 +23,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     camera2.portability.force_api=1 \
     media.stagefright.legacyencoder=true \
     media.stagefright.less-secure=true \
-    camera.disable_treble=1
+    camera.disable_treble=true
 
 # Display
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -62,11 +63,16 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.baseband.arch=mdm \
     ro.telephony.call_ring.multiple=0 \
+    persist.radio.apm_sim_not_pwdn=1 \
     ro.telephony.ril_class=HTCQualcommRIL
 
 # Time services
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.timed.enable=true
+
+# Drm
+PRODUCT_PROPERTY_OVERRIDES += \
+    drm.service.enabled=true
 
 # Thermal
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -76,6 +82,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0 \
     wifi.supplicant_scan_interval=150
+
+# Enable Wifi calling
+PRODUCT_PROPERTY_OVERRIDES += \
+    persist.data.iwlan.enable=true
 
 # Storage
 PRODUCT_PROPERTY_OVERRIDES += \

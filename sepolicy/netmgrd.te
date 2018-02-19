@@ -6,4 +6,4 @@ allow netmgrd system_file:file rx_file_perms;
 allow netmgrd vendor_file_type:file rx_file_perms;
 allow netmgrd system_file:file lock;
 
-set_prop(netmgrd, debug_prop)
+allow netmgrd netmgrd:netlink_route_socket { read };

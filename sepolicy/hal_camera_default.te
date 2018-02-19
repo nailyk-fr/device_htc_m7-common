@@ -5,9 +5,8 @@ allow hal_camera_default system_file:file execmod;
 allow hal_camera_default hal_graphics_mapper_hwservice:hwservice_manager find;
 
 unix_socket_send(hal_camera_default, camera, mm-qcamerad)
-allow hal_camera_default debugfs:file { getattr open read write };
 allow hal_camera_default init:unix_dgram_socket sendto;
 allow hal_camera_default mediaserver:binder { call transfer };
 allow hal_camera_default self:netlink_kobject_uevent_socket { bind create getopt read setopt };
-allow hal_camera_default system_data_file:sock_file write;
+allow hal_camera_default system_data_file:sock_file w_file_perms;
 

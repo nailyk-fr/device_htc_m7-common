@@ -25,19 +25,15 @@
 # variant, so that it gets overwritten by the parent (which goes
 # against the traditional rules of inheritance).
 
-# Fuk msm8960
-# inherit from common msm8960
-#-include device/htc/msm8960-common/BoardConfigCommon.mk
+PLATFORM_PATH := device/htc/m7-common
 
 BOARD_VENDOR := htc
-
-LOCAL_PATH := device/htc/m7-common
 
 # Fuk Dependencies
 ALLOW_MISSING_DEPENDENCIES=true
 
 # General compilation flags
-TARGET_SPECIFIC_HEADER_PATH += $(LOCAL_PATH)/include
+TARGET_SPECIFIC_HEADER_PATH += $(PLATFORM_PATH)/include
 
 # QCOM hardware
 BOARD_USES_QCOM_HARDWARE := true
@@ -45,7 +41,9 @@ BOARD_USES_QCOM_HARDWARE := true
 # Audio
 BOARD_USES_ALSA_AUDIO := true
 BOARD_HAVE_HTC_CSDCLIENT := true
+AUDIO_FEATURE_ENABLED_MULTI_VOICE_SESSIONS := true
 USE_CUSTOM_AUDIO_POLICY := 1
+USE_XML_AUDIO_POLICY_CONF := 1
 
 # USB
 TARGET_USES_LEGACY_ADB_INTERFACE := true
@@ -61,8 +59,8 @@ BOARD_NFC_HAL_SUFFIX := msm8960
 
 # Bluetooth
 BOARD_HAVE_BLUETOOTH := true
-BOARD_CUSTOM_BT_CONFIG := $(LOCAL_PATH)/bluetooth/libbt_vndcfg.txt
-BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(LOCAL_PATH)/bluetooth
+BOARD_CUSTOM_BT_CONFIG := $(PLATFORM_PATH)/bluetooth/libbt_vndcfg.txt
+BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(PLATFORM_PATH)/bluetooth
 BOARD_BLUETOOTH_USES_HCIATTACH_PROPERTY := false
 BOARD_HAVE_BLUETOOTH_BCM := true
 
@@ -130,29 +128,30 @@ BOARD_KERNEL_IMAGE_NAME := zImage
 BOARD_MKBOOTIMG_ARGS := --ramdisk_offset 0x01800000
 TARGET_KERNEL_CONFIG := m7_defconfig
 TARGET_KERNEL_SOURCE := kernel/htc/msm8960
+TARGET_COMPILE_WITH_MSM_KERNEL := true
 
 # Recovery
 BOARD_GLOBAL_CFLAGS := -DBOARD_RECOVERY_BLDRMSG_OFFSET=2048
 BOARD_NO_SECURE_DISCARD := true
 TARGET_RECOVERY_DEVICE_DIRS += device/htc/m7-common
-TARGET_RECOVERY_FSTAB := $(LOCAL_PATH)/rootdir/etc/fstab.qcom
+TARGET_RECOVERY_FSTAB := $(PLATFORM_PATH)/rootdir/etc/fstab.qcom
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 TARGET_RECOVERY_DEVICE_MODULES += chargeled
 TARGET_USERIMAGES_USE_EXT4 := true
 #TARGET_USERIMAGES_USE_F2FS := true
 
 # Los Hardware
-BOARD_HARDWARE_CLASS := $(LOCAL_PATH)/lineagehw
+BOARD_HARDWARE_CLASS := $(PLATFORM_PATH)/lineagehw
 
 # RIL
 BOARD_PROVIDES_LIBRIL := true
 TARGET_RIL_VARIANT := caf
-BOARD_RIL_CLASS := ../../../$(LOCAL_PATH)/ril/
+BOARD_RIL_CLASS := ../../../$(PLATFORM_PATH)/ril/
 
 # SELinux
 -include device/qcom/sepolicy/sepolicy.mk
 -include device/qcom/sepolicy/legacy-sepolicy.mk
-BOARD_SEPOLICY_DIRS += $(LOCAL_PATH)/sepolicy
+BOARD_SEPOLICY_DIRS += $(PLATFORM_PATH)/sepolicy
 
 # Wifi
 BOARD_HOSTAPD_DRIVER             := NL80211

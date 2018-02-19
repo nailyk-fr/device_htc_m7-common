@@ -1,5 +1,3 @@
-type camera_sysfs, sysfs_type, fs_type ;
-type ion_debugfs, debugfs_type, fs_type;
-type surfaceflinger_sysfs, sysfs_type, fs_type ;
-type vibeamp_sysfs, sysfs_type, fs_type ;
-
+type ion_debugfs, fs_type, debugfs_type;
+type surfaceflinger_sysfs, fs_type, sysfs_type;
+type vibeamp_sysfs, fs_type, sysfs_type;
