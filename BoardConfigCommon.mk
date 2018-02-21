@@ -29,7 +29,6 @@ PLATFORM_PATH := device/htc/m7-common
 
 BOARD_VENDOR := htc
 
-# Fuk Dependencies
 ALLOW_MISSING_DEPENDENCIES=true
 
 # General compilation flags
@@ -43,6 +42,15 @@ BOARD_USES_ALSA_AUDIO := true
 BOARD_HAVE_HTC_CSDCLIENT := true
 USE_CUSTOM_AUDIO_POLICY := 1
 USE_XML_AUDIO_POLICY_CONF := 1
+
+# Bionic
+#Target_LD_SHIM_LIBS := \
+#        /system/vendor/lib/hw/camera.vendor.msm8960.so|libcamera_shim.so \
+#        /system/vendor/lib/libqc-opt.so|libqc-opt_shim.so \
+#        /system/lib/liblog.so|liblog_shim.so \
+#        /system/vendor/lib/libwvm.so|libshim_wvm.so \
+#        /system/vendor/lib/libril.so|libshim_ril.so \
+#        /system/vendor/lib/libril-qc-qmi-1.so|libshim_ril.so
 
 # USB
 TARGET_USES_LEGACY_ADB_INTERFACE := true
