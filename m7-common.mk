@@ -73,10 +73,6 @@ PRODUCT_PACKAGES += \
     android.hardware.power@1.0-impl \
     power.msm8960
 
-# Audio
-USE_CUSTOM_AUDIO_POLICY := 1
-USE_XML_AUDIO_POLICY_CONF := 1
-
 PRODUCT_PACKAGES += \
     android.hardware.audio@2.0-impl \
     android.hardware.audio@2.0-service \
@@ -248,7 +244,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     ebtables \
     ethertypes \
-    libxml2
+    libxml2 \
+    libcnefeatureconfig
 
 # Seccomp policy
 PRODUCT_COPY_FILES += \
