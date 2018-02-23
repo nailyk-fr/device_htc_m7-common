@@ -32,8 +32,6 @@ $(call inherit-product-if-exists, frameworks/native/build/phone-xxhdpi-2048-hwui
 TARGET_SCREEN_HEIGHT := 1920
 TARGET_SCREEN_WIDTH := 1080
 
-PRODUCT_CHARACTERISTICS := nosdcard
-
 # Permissions
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.audio.low_latency.xml:system/etc/permissions/android.hardware.audio.low_latency.xml \
@@ -59,14 +57,8 @@ PRODUCT_COPY_FILES += \
 
 # APKs
 PRODUCT_PACKAGES += \
-    CMFileManager \
     AICP_OTA
-
-# HIDL
-PRODUCT_PACKAGES += \
-    android.hidl.base@1.0 \
-    android.hidl.manager@1.0 \
-    android.hidl.manager@1.0-java
+#CMFileManager \
 
 # Power
 PRODUCT_PACKAGES += \
@@ -75,7 +67,6 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     android.hardware.audio@2.0-impl \
-    android.hardware.audio@2.0-service \
     android.hardware.audio.effect@2.0-impl \
     android.hardware.soundtrigger@2.0-impl \
     android.hardware.broadcastradio@1.0-impl \
@@ -216,13 +207,6 @@ endif
 PRODUCT_COPY_FILES += \
     $(NFCEE_ACCESS_PATH):system/etc/nfcee_access.xml
 
-# Telephony packages
-PRODUCT_PACKAGES += \
-    telephony-ext
-
-PRODUCT_BOOT_JARS += \
-telephony-ext
-
 # Shims
 PRODUCT_PACKAGES += \
     libshim_atomic \
@@ -240,12 +224,10 @@ PRODUCT_PACKAGES += \
     init.target.rc \
     ueventd.qcom.rc
 
-# Ril-IPv6 tethering
+# IPv6 tethering
 PRODUCT_PACKAGES += \
     ebtables \
-    ethertypes \
-    libxml2 \
-    libcnefeatureconfig
+    ethertypes
 
 # Seccomp policy
 PRODUCT_COPY_FILES += \
