@@ -88,5 +88,5 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.data.iwlan.enable=true
 
 # Storage
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.sys.sdcardfs=true
+#PRODUCT_PROPERTY_OVERRIDES += \
+#    ro.sys.sdcardfs=true
