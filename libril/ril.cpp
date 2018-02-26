@@ -632,12 +632,8 @@ RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responsel
         int rwlockRet = pthread_rwlock_rdlock(radioServiceRwlockPtr);
         assert(rwlockRet == 0);
 
-        if (pRI->pCI->responseFunction) {
-            ret = pRI->pCI->responseFunction((int) socket_id,
-                    responseType, pRI->token, e, response, responselen);
-        } else {
-            RLOGE ("No unsolicited response function defined for token %d", pRI->token);
-        }
+        ret = pRI->pCI->responseFunction((int) socket_id,
+                responseType, pRI->token, e, response, responselen);
 
         rwlockRet = pthread_rwlock_unlock(radioServiceRwlockPtr);
         assert(rwlockRet == 0);
@@ -747,30 +743,9 @@ void RIL_onUnsolicitedResponse(int unsolResponse, const void *data,
     unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
 
     if ((unsolResponseIndex < 0)
-            || (unsolResponseIndex >= (int32_t)NUM_ELEMS(s_unsolResponses))) {
-        /*
-         * catching HTC custom responses and mapping them directly to the ril_unsol_commands array
-         * before giving up on an unsupported response
-         *
-         * don't forget to update indices when changing something!
-         */
-        switch (unsolResponse) {
-            case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED:
-                unsolResponse = RIL_UNSOL_VOICE_RADIO_TECH_CHANGED;
-                break;
-            case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED:
-                unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
-                break;
-            case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED_HTC:
-                unsolResponse = RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED;
-                break;
-            case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
-                unsolResponseIndex = unsolResponse - RIL_UNSOL_RESPONSE_BASE;
-                break;
-            default:
-                RLOGE("unsupported unsolicited response code %d", unsolResponse);
-                return;
-        }
+        || (unsolResponseIndex >= (int32_t)NUM_ELEMS(s_unsolResponses))) {
+        RLOGE("unsupported unsolicited response code %d", unsolResponse);
+        return;
     }
 
     // Grab a wake lock if needed for this reponse,

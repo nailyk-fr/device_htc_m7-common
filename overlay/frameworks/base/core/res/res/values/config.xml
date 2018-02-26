@@ -38,6 +38,7 @@
          <item>"mobile_ims,11,0,2,60000,true"</item>
          <item>"mobile_cbs,12,0,2,60000,true"</item>
          <item>"bluetooth,7,7,2,-1,true"</item>
+         <item>ethernet,9,9,9,-1,true</item>
     </string-array>
 
     <!-- This string array should be overridden by the device to present a list of radio
@@ -111,7 +112,6 @@
     <integer-array translatable="false" name="config_tether_upstream_types">
         <item>0</item>
         <item>1</item>
-        <item>4</item>
         <item>5</item>
         <item>7</item>
         <item>9</item>
@@ -126,9 +126,6 @@
     <!-- Flag indicating whether we should enable the automatic brightness in Settings.
          config_hardware_automatic_brightness_available is not set, so we will use software implementation -->
     <bool name="config_automatic_brightness_available">true</bool>
-
-    <!-- Set to true to add links to Cell Broadcast app from Settings and MMS app. -->
-    <bool name="config_cellBroadcastAppLinks">true</bool>
 
     <!-- If this is true, the screen will come on when you unplug usb/power/whatever. -->
     <bool name="config_unplugTurnsOnScreen">true</bool>
@@ -272,47 +269,11 @@
         <item>30</item>
     </integer-array>
 
-    <!-- Enables SIP on WIFI only -->
-    <bool name="config_sip_wifi_only">false</bool>
-
-    <!-- Enables built-in SIP phone capability -->
-    <bool name="config_built_in_sip_phone">true</bool>
-
-    <!-- Maximum number of supported users -->
-    <integer name="config_multiuserMaximumUsers">4</integer>
-
-    <!-- Whether Multiuser UI should be shown -->
-    <bool name="config_enableMultiUserUI">true</bool>
-
     <!-- Config determines whether to update phone object when voice registration
          state changes. Voice radio tech change will always trigger an update of
          phone object irrespective of this config -->
-    <bool name="config_switch_phone_on_voice_reg_state_change">false</bool>
-
-    <!-- The VoiceMail default value is displayed to my own number if it is true -->
-    <bool name="config_telephony_use_own_number_for_voicemail">true</bool>
-
-    <!-- If this value is true, Sms encoded as octet is decoded by utf8 decoder.
-         If false, decoded by Latin decoder. -->
-    <bool name="config_sms_utf8_support">true</bool>
-
-    <!-- Default network policy warning threshold, in megabytes. -->
-    <integer name="config_networkPolicyDefaultWarning">51200</integer>
-
-    <!-- For some operators, PDU has garbages. To fix it, need to use valid index -->
-    <integer name="config_valid_wappush_index">4</integer>
-     
-    <!-- ComponentName of a dream to show whenever the system would otherwise have
-         gone to sleep.  When the PowerManager is asked to go to sleep, it will instead
-         try to start this dream if possible.  The dream should typically call startDozing()
-         to put the display into a low power state and allow the application processor
-         to be suspended.  When the dream ends, the system will go to sleep as usual.
-         Specify the component name or an empty string if none.
-
-         Note that doze dreams are not subject to the same start conditions as ordinary dreams.
-         Doze dreams will run whenever the power manager is in a dozing state. -->
-    <string name="config_dozeComponent" translatable="false">com.android.systemui/com.android.systemui.doze.DozeService</string>
-    
+    <bool name="config_switch_phone_on_voice_reg_state_change">false</bool>    
+         
     <!-- Screen brightness used to dim the screen while dozing in a very low power state.
          May be less than the minimum allowed brightness setting
          that can be set by the user. -->
@@ -341,11 +302,16 @@
     -->
     <bool name="config_powerDecoupleInteractiveModeFromDisplay">true</bool>
 
-    <!-- Sprint need a 70 ms delay for 3way call -->
-    <integer name="config_cdma_3waycall_flash_delay">70</integer>
+    <!-- ComponentName of a dream to show whenever the system would otherwise have
+         gone to sleep.  When the PowerManager is asked to go to sleep, it will instead
+         try to start this dream if possible.  The dream should typically call startDozing()
+         to put the display into a low power state and allow the application processor
+         to be suspended.  When the dream ends, the system will go to sleep as usual.
+         Specify the component name or an empty string if none.
 
-    <!-- Use ERI text for network name on CDMA LTE -->
-    <bool name="config_LTE_eri_for_network_name">true</bool>
+         Note that doze dreams are not subject to the same start conditions as ordinary dreams.
+         Doze dreams will run whenever the power manager is in a dozing state. -->
+    <string name="config_dozeComponent" translatable="false">com.android.systemui/com.android.systemui.doze.DozeService</string>
 
     <!-- Override the default detection behavior for the framework method
          android.view.ViewConfiguration#hasPermanentMenuKey().
