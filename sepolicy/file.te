@@ -1,3 +1,5 @@
 type ion_debugfs, fs_type, debugfs_type;
 type surfaceflinger_sysfs, fs_type, sysfs_type;
 type vibeamp_sysfs, fs_type, sysfs_type;
+type perfd_socket, file_type;
+

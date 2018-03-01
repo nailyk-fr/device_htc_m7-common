@@ -1,2 +1,1 @@
-allow tee vendor_file:file execmod;
 
